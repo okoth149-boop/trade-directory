@@ -29,7 +29,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { kenyanCounties } from '@/lib/kenyan-counties';
 import { ExporterProfileCard } from '@/components/exporter-profile-card';
 import { EXPORT_MARKETS, BUSINESS_SECTORS } from '@/types/business';
-import { INDUSTRIES, SECTORS_BY_INDUSTRY } from '@/lib/constants';
+import { INDUSTRIES, SECTORS_BY_INDUSTRY, COUNTIES, KENYAN_CITIES } from '@/lib/constants';
 
 // FIX #7: sessionStorage cache keys
 const PRODUCT_OPTIONS_CACHE_KEY = 'dir_product_options_v1';
@@ -120,11 +120,11 @@ const Filters = ({
             </AccordionItem>
           )}
           <AccordionItem value="county">
-            <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">Location</AccordionTrigger>
+            <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">County</AccordionTrigger>
             <AccordionContent className="pt-2">
               <ScrollArea className="h-60 px-4">
                 <div className="space-y-2 pb-2">
-                  {kenyanCounties.map(county => (
+                  {COUNTIES.map(county => (
                     <div key={county} className="flex items-center space-x-2">
                       <Checkbox
                         id={`county-${county}`}
@@ -132,6 +132,26 @@ const Filters = ({
                         onCheckedChange={() => onFilterChange('county', county)}
                       />
                       <Label htmlFor={`county-${county}`} className="font-normal cursor-pointer flex-grow py-1">{county}</Label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="city">
+            <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">City</AccordionTrigger>
+            <AccordionContent className="pt-2">
+              <ScrollArea className="h-60 px-4">
+                <div className="space-y-2 pb-2">
+                  {[...new Set(KENYAN_CITIES)].map(city => (
+                    <div key={city} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`city-${city}`}
+                        checked={selectedFilters['town']?.includes(city) || false}
+                        onCheckedChange={() => onFilterChange('town', city)}
+                      />
+                      <Label htmlFor={`city-${city}`} className="font-normal cursor-pointer flex-grow py-1">{city}</Label>
                     </div>
                   ))}
                 </div>
