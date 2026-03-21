@@ -2,86 +2,75 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Chip,
-  Avatar,
-  Box,
-  Typography,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Grid,
-  Card,
-  CardContent,
-  TextField,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Tab,
-  Tabs,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  Button, Chip, Avatar, Box, Typography, CircularProgress, Dialog,
+  DialogTitle, DialogContent, DialogActions, Grid, Card, CardContent,
+  TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem,
+  Tab, Tabs,
 } from '@mui/material';
 import {
-  CheckCircle as CheckCircleIcon,
-  X as CancelIcon,
-  Eye as VisibilityIcon,
-  MapPin as LocationOnIcon,
-  Building as BusinessIcon,
-  Phone as PhoneIcon,
-  Globe as WebIcon,
-  Calendar as CalendarIcon,
-  Users as UsersIcon,
-  Search as SearchIcon,
-  FileText as FileTextIcon,
-  Download as DownloadIcon,
+  CheckCircle as CheckCircleIcon, X as CancelIcon, Eye as VisibilityIcon,
+  MapPin as LocationOnIcon, Building as BusinessIcon, Search as SearchIcon,
+  FileText as FileTextIcon, Download as DownloadIcon, Lock as LockIcon,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
-// Define interfaces for better type safety
 interface Business {
   id: string;
   name: string;
   description?: string;
   sector?: string;
+  industry?: string;
   location?: string;
   county?: string;
   town?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  companyEmail?: string;
-  whatsappNumber?: string;
-  website?: string;
+  country?: string;
   physicalAddress?: string;
   coordinates?: string;
   logoUrl?: string;
+
+  // Registration-owned fields (from exporter registration)
+  registrationNumber?: string;
+  kraPin?: string;
+  dateOfIncorporation?: string;
+  legalStructure?: string;
+  serviceOffering?: string;
+  primaryContactFirstName?: string;
+  primaryContactLastName?: string;
+  primaryContactEmail?: string;
+  primaryContactPhone?: string;
+  companyEmail?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+
+  // Business profile fields
+  kenyanNationalId?: string;
+  licenceNumber?: string;
+  exportLicense?: string;
   typeOfBusiness?: string;
   businessUserOrganisation?: string;
   companySize?: string;
   numberOfEmployees?: string;
   yearEstablished?: string;
-  kenyanNationalId?: string;
-  registrationNumber?: string;
-  licenceNumber?: string;
-  kraPin?: string;
-  taxId?: string;
-  exportLicense?: string;
+  mobileNumber?: string;
+  whatsappNumber?: string;
+  website?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
+  productHsCode?: string;
   exportVolumePast3Years?: string;
   currentExportMarkets?: string;
   productionCapacityPast3?: string;
   companyStory?: string;
-  twitterUrl?: string;
-  instagramUrl?: string;
+
+  // Documents
+  registrationCertificateUrl?: string;
+  pinCertificateUrl?: string;
+  kenyanNationalIdUrl?: string;
+  incorporationCertificateUrl?: string;
+  exportLicenseUrl?: string;
+
   owner?: {
     firstName?: string;
     lastName?: string;
@@ -91,15 +80,29 @@ interface Business {
   verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
   createdAt: string;
   updatedAt?: string;
-  registrationCertificateUrl?: string;
-  pinCertificateUrl?: string;
-  incorporationCertificateUrl?: string;
-  industry?: string;
-  productHsCode?: string;
-  serviceOffering?: string;
   products?: any[];
   certifications?: any[];
 }
+
+// Small helper for a labelled info row
+const InfoRow = ({ label, value, fromReg }: { label: string; value?: string | null; fromReg?: boolean }) => {
+  if (!value) return null;
+  return (
+    <Box>
+      <Box display="flex" alignItems="center" gap={0.5}>
+        <Typography variant="subtitle2" color="textSecondary">{label}</Typography>
+        {fromReg && (
+          <Box display="flex" alignItems="center" gap={0.3}
+            sx={{ bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.200', borderRadius: 1, px: 0.5, py: 0.1 }}>
+            <LockIcon size={10} style={{ color: '#d97706' }} />
+            <Typography variant="caption" sx={{ color: 'warning.700', fontSize: '0.6rem' }}>reg</Typography>
+          </Box>
+        )}
+      </Box>
+      <Typography variant="body2">{value}</Typography>
+    </Box>
+  );
+};
 
 export function BusinessVerificationTab() {
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
@@ -113,46 +116,37 @@ export function BusinessVerificationTab() {
   const [detailsTabValue, setDetailsTabValue] = useState(0);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchBusinesses();
-  }, []);
+  useEffect(() => { fetchBusinesses(); }, []);
 
   const fetchBusinesses = async () => {
     try {
       setIsLoading(true);
       const response = await apiClient.getBusinesses();
-      const businessesData = response.businesses as Business[];
-      setAllBusinesses(businessesData);
-    } catch (error) {
-
+      setAllBusinesses(response.businesses as Business[]);
+    } catch {
       setAllBusinesses([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Filter businesses based on search and status filter
   const filteredBusinesses = useMemo(() => {
     let result = [...allBusinesses];
-    
-    // Filter by verification status
-    if (statusFilter !== 'ALL') {
-      result = result.filter(b => b.verificationStatus === statusFilter);
-    }
-    
-    // Search filter
+    if (statusFilter !== 'ALL') result = result.filter(b => b.verificationStatus === statusFilter);
     if (searchTerm) {
-      const search = searchTerm.toLowerCase();
+      const s = searchTerm.toLowerCase();
       result = result.filter(b =>
-        b.name?.toLowerCase().includes(search) ||
-        b.owner?.firstName?.toLowerCase().includes(search) ||
-        b.owner?.lastName?.toLowerCase().includes(search) ||
-        b.contactEmail?.toLowerCase().includes(search) ||
-        b.sector?.toLowerCase().includes(search) ||
-        b.location?.toLowerCase().includes(search)
+        b.name?.toLowerCase().includes(s) ||
+        b.owner?.firstName?.toLowerCase().includes(s) ||
+        b.owner?.lastName?.toLowerCase().includes(s) ||
+        b.contactEmail?.toLowerCase().includes(s) ||
+        b.companyEmail?.toLowerCase().includes(s) ||
+        b.sector?.toLowerCase().includes(s) ||
+        b.registrationNumber?.toLowerCase().includes(s) ||
+        b.kraPin?.toLowerCase().includes(s) ||
+        b.location?.toLowerCase().includes(s)
       );
     }
-    
     return result;
   }, [allBusinesses, searchTerm, statusFilter]);
 
@@ -160,21 +154,10 @@ export function BusinessVerificationTab() {
     try {
       setIsVerifying(businessId);
       await apiClient.verifyBusiness(businessId, status);
-      
-      toast({
-        title: `Business ${status.toLowerCase()}`,
-        description: `${businessName} has been ${status.toLowerCase()}${reason ? `: ${reason}` : '.'}`,
-      });
-
-      // Refresh the list
+      toast({ title: `Business ${status.toLowerCase()}`, description: `${businessName} has been ${status.toLowerCase()}${reason ? `: ${reason}` : '.'}` });
       await fetchBusinesses();
-    } catch (error) {
-
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update business verification status.',
-      });
+    } catch {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update verification status.' });
     } finally {
       setIsVerifying(null);
       setShowRejectDialog(null);
@@ -183,73 +166,36 @@ export function BusinessVerificationTab() {
   };
 
   const getStatusColor = (status: string): 'success' | 'error' | 'warning' => {
-    switch (status) {
-      case 'VERIFIED': return 'success';
-      case 'REJECTED': return 'error';
-      default: return 'warning';
-    }
+    if (status === 'VERIFIED') return 'success';
+    if (status === 'REJECTED') return 'error';
+    return 'warning';
   };
 
-  // Rejection Reason Dialog
   const RejectionReasonDialog = () => {
     if (!showRejectDialog) return null;
-
     return (
-      <Dialog 
-        open={!!showRejectDialog} 
-        onClose={() => {
-          setShowRejectDialog(null);
-          setRejectionReason('');
-        }}
-        maxWidth="sm" 
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': { m: { xs: 2, sm: 3 }, maxHeight: { xs: 'calc(100% - 32px)', sm: 'calc(100% - 64px)' }, zIndex: 9999 },
-          '& .MuiBackdrop-root': { zIndex: 9998 },
-        }}
-      >
+      <Dialog open={!!showRejectDialog} onClose={() => { setShowRejectDialog(null); setRejectionReason(''); }}
+        maxWidth="sm" fullWidth
+        sx={{ '& .MuiDialog-paper': { m: { xs: 2, sm: 3 }, zIndex: 9999 }, '& .MuiBackdrop-root': { zIndex: 9998 } }}>
         <DialogTitle>Reject Business Verification</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-            Please provide a reason for rejecting {showRejectDialog.name}&apos;s verification application.
-            This will be shared with the business owner.
+            Provide a reason for rejecting <strong>{showRejectDialog.name}</strong>. This will be shared with the business owner.
           </Typography>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Rejection Reason"
-            value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
-            placeholder="Enter the reason for rejection..."
-            required
-          />
+          <TextField fullWidth multiline rows={4} label="Rejection Reason" value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)} placeholder="Enter the reason for rejection..." required />
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={() => {
-              setShowRejectDialog(null);
-              setRejectionReason('');
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
+          <Button onClick={() => { setShowRejectDialog(null); setRejectionReason(''); }}>Cancel</Button>
+          <Button color="error" variant="contained"
             onClick={() => {
               if (!rejectionReason.trim()) {
-                toast({
-                  variant: 'destructive',
-                  title: 'Reason Required',
-                  description: 'Please provide a reason for rejection.',
-                });
+                toast({ variant: 'destructive', title: 'Reason Required', description: 'Please provide a reason for rejection.' });
                 return;
               }
               handleVerification(showRejectDialog.id, showRejectDialog.name, 'REJECTED', rejectionReason);
             }}
-            disabled={isVerifying === showRejectDialog.id}
-          >
+            disabled={isVerifying === showRejectDialog.id}>
             {isVerifying === showRejectDialog.id ? 'Rejecting...' : 'Reject'}
           </Button>
         </DialogActions>
@@ -260,515 +206,311 @@ export function BusinessVerificationTab() {
   const BusinessDetailsDialog = ({ business, open, onClose }: { business: Business; open: boolean; onClose: () => void }) => {
     if (!business) return null;
 
-    // Safely parse coordinates
-    let coordinates = null;
+    let coordinates: { lat: number; lng: number } | null = null;
     if (business.coordinates) {
-      try {
-        if (typeof business.coordinates === 'string') {
-          coordinates = JSON.parse(business.coordinates);
-        } else if (typeof business.coordinates === 'object') {
-          coordinates = business.coordinates;
-        }
-      } catch (e) {
-        // Invalid coordinates, leave as null
-      }
+      try { coordinates = typeof business.coordinates === 'string' ? JSON.parse(business.coordinates) : business.coordinates; } catch { /* ignore */ }
     }
 
+    const docCount = [
+      business.registrationCertificateUrl,
+      business.pinCertificateUrl,
+      business.kenyanNationalIdUrl,
+      business.incorporationCertificateUrl,
+      business.exportLicenseUrl,
+    ].filter(Boolean).length;
+
     return (
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth
-        sx={{
-          '& .MuiDialog-paper': { m: { xs: 2, sm: 3 }, maxHeight: { xs: 'calc(100% - 32px)', sm: 'calc(100% - 64px)' }, zIndex: 9999 },
-          '& .MuiBackdrop-root': { zIndex: 9998 },
-        }}
-      >
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth
+        sx={{ '& .MuiDialog-paper': { m: { xs: 1, sm: 3 }, maxHeight: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 64px)' }, zIndex: 9999 }, '& .MuiBackdrop-root': { zIndex: 9998 } }}>
         <DialogTitle>
           <Box display="flex" alignItems="center" gap={2}>
             <Avatar src={business.logoUrl} alt={business.name} sx={{ width: 48, height: 48 }}>
               <BusinessIcon />
             </Avatar>
-            <Box>
+            <Box flex={1}>
               <Typography variant="h6">{business.name}</Typography>
               <Typography variant="caption" color="textSecondary">
-                {business.sector} • {business.location}
+                {business.sector}{business.industry ? ` · ${business.industry}` : ''} · {business.location}
               </Typography>
             </Box>
+            <Chip label={business.verificationStatus} color={getStatusColor(business.verificationStatus)} size="small" />
           </Box>
         </DialogTitle>
-        
-        <DialogContent>
-          <Tabs value={detailsTabValue} onChange={(_, v) => setDetailsTabValue(v)} sx={{ mb: 2 }}>
-            <Tab label="Details" />
-            <Tab label="Documents" />
-            <Tab label="History" />
+
+        <DialogContent dividers>
+          <Tabs value={detailsTabValue} onChange={(_, v) => setDetailsTabValue(v)} sx={{ mb: 2 }} variant="scrollable" scrollButtons="auto">
+            <Tab label="Registration Info" />
+            <Tab label="Business Details" />
+            <Tab label="Location & Contact" />
+            <Tab label={`Documents (${docCount})`} />
+            <Tab label="Export & Capacity" />
           </Tabs>
 
+          {/* TAB 0 — Registration Info (reg-owned fields) */}
           {detailsTabValue === 0 && (
-          <Grid container spacing={3}>
-            {/* Basic Information */}
-            <Grid item xs={12}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Basic Information</Typography>
-                  <Box display="flex" flexDirection="column" gap={2}>
-                    <Box>
-                      <Typography variant="subtitle2" color="textSecondary">Business Name</Typography>
-                      <Typography variant="body2">{business.name}</Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" color="textSecondary">Description</Typography>
-                      <Typography variant="body2">{business.description || 'No description provided'}</Typography>
-                    </Box>
-                    {business.companyStory && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Company Story</Typography>
-                        <Typography variant="body2">{business.companyStory}</Typography>
-                      </Box>
-                    )}
-                    <Box display="flex" gap={4} flexWrap="wrap">
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Sector</Typography>
-                        <Typography variant="body2">{business.sector}</Typography>
-                      </Box>
-                      {business.typeOfBusiness && (
-                        <Box>
-                          <Typography variant="subtitle2" color="textSecondary">Type of Business</Typography>
-                          <Typography variant="body2">{business.typeOfBusiness}</Typography>
-                        </Box>
-                      )}
-                      {business.businessUserOrganisation && (
-                        <Box>
-                          <Typography variant="subtitle2" color="textSecondary">Organization</Typography>
-                          <Typography variant="body2">{business.businessUserOrganisation}</Typography>
-                        </Box>
-                      )}
-                      {business.industry && (
-                        <Box>
-                          <Typography variant="subtitle2" color="textSecondary">Industry</Typography>
-                          <Typography variant="body2">{business.industry}</Typography>
-                        </Box>
-                      )}
-                    </Box>
-                    {business.productHsCode && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Product HS Code</Typography>
-                        <Typography variant="body2">{business.productHsCode}</Typography>
-                      </Box>
-                    )}
-                    {business.serviceOffering && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Service Offering</Typography>
-                        <Typography variant="body2">{business.serviceOffering}</Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, p: 1.5, bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.200', borderRadius: 1 }}>
+                  <LockIcon size={14} style={{ color: '#d97706' }} />
+                  <Typography variant="caption" sx={{ color: 'warning.800' }}>
+                    Fields marked with a lock icon are sourced from the Exporter Registration form and cannot be edited in the Business Profile.
+                  </Typography>
+                </Box>
+              </Grid>
 
-            {/* Location Information */}
-            <Grid item xs={12} md={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Location Information</Typography>
-                  <Box display="flex" flexDirection="column" gap={2}>
-                    {business.physicalAddress && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Physical Address</Typography>
-                        <Typography variant="body2">{business.physicalAddress}</Typography>
-                      </Box>
-                    )}
-                    <Box display="flex" gap={4} flexWrap="wrap">
-                      {business.town && (
-                        <Box>
-                          <Typography variant="subtitle2" color="textSecondary">Town</Typography>
-                          <Typography variant="body2">{business.town}</Typography>
-                        </Box>
-                      )}
-                      {business.county && (
-                        <Box>
-                          <Typography variant="subtitle2" color="textSecondary">County</Typography>
-                          <Typography variant="body2">{business.county}</Typography>
-                        </Box>
-                      )}
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Location</Typography>
-                        <Typography variant="body2">{business.location}</Typography>
-                      </Box>
-                    </Box>
-                    {coordinates && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">GPS Coordinates</Typography>
-                        <Typography variant="body2">
-                          Lat: {coordinates.lat.toFixed(6)}, Lng: {coordinates.lng.toFixed(6)}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Contact Information */}
-            <Grid item xs={12} md={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Contact Information</Typography>
-                  <Box display="flex" flexDirection="column" gap={2}>
-                    <Box>
-                      <Typography variant="subtitle2" color="textSecondary">Contact Email</Typography>
-                      <Typography variant="body2">{business.contactEmail || 'Not provided'}</Typography>
-                    </Box>
-                    {business.companyEmail && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Company Email</Typography>
-                        <Typography variant="body2">{business.companyEmail}</Typography>
-                      </Box>
-                    )}
-                    <Box>
-                      <Typography variant="subtitle2" color="textSecondary">Contact Phone</Typography>
-                      <Typography variant="body2">{business.contactPhone || 'Not provided'}</Typography>
-                    </Box>
-                    {business.whatsappNumber && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">WhatsApp Number</Typography>
-                        <Typography variant="body2">{business.whatsappNumber}</Typography>
-                      </Box>
-                    )}
-                    {business.website && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Website</Typography>
-                        <Typography variant="body2">
-                          <a href={business.website} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
-                            {business.website}
-                          </a>
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Company Details */}
-            <Grid item xs={12} md={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Company Details</Typography>
-                  <Box display="flex" flexDirection="column" gap={2}>
-                    {business.yearEstablished && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Year Established</Typography>
-                        <Typography variant="body2">{business.yearEstablished}</Typography>
-                      </Box>
-                    )}
-                    {business.numberOfEmployees && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Number of Employees</Typography>
-                        <Typography variant="body2">{business.numberOfEmployees}</Typography>
-                      </Box>
-                    )}
-                    {business.companySize && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Company Size</Typography>
-                        <Typography variant="body2">{business.companySize}</Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Registration & Compliance */}
-            <Grid item xs={12} md={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Registration & Compliance</Typography>
-                  <Box display="flex" flexDirection="column" gap={2}>
-                    {business.kenyanNationalId && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Kenyan National ID</Typography>
-                        <Typography variant="body2">{business.kenyanNationalId}</Typography>
-                      </Box>
-                    )}
-                    {business.registrationNumber && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Registration Number</Typography>
-                        <Typography variant="body2">{business.registrationNumber}</Typography>
-                      </Box>
-                    )}
-                    {business.kraPin && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">KRA PIN</Typography>
-                        <Typography variant="body2">{business.kraPin}</Typography>
-                      </Box>
-                    )}
-                    {business.taxId && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Tax ID</Typography>
-                        <Typography variant="body2">{business.taxId}</Typography>
-                      </Box>
-                    )}
-                    {business.licenceNumber && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Licence Number</Typography>
-                        <Typography variant="body2">{business.licenceNumber}</Typography>
-                      </Box>
-                    )}
-                    {business.exportLicense && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Export License</Typography>
-                        <Typography variant="body2">{business.exportLicense}</Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Export Information */}
-            <Grid item xs={12}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Export Information</Typography>
-                  <Box display="flex" flexDirection="column" gap={2}>
-                    {business.currentExportMarkets && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Current Export Markets</Typography>
-                        <Typography variant="body2">{business.currentExportMarkets}</Typography>
-                      </Box>
-                    )}
-                    {business.exportVolumePast3Years && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Export Volume (Past 3 Years)</Typography>
-                        <Typography variant="body2">{business.exportVolumePast3Years}</Typography>
-                      </Box>
-                    )}
-                    {business.productionCapacityPast3 && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Production Capacity (Past 3 Years)</Typography>
-                        <Typography variant="body2">{business.productionCapacityPast3}</Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Social Media */}
-            {(business.twitterUrl || business.instagramUrl) && (
+              {/* Business Identity */}
               <Grid item xs={12} md={6}>
                 <Card variant="outlined">
                   <CardContent>
-                    <Typography variant="h6" gutterBottom>Social Media</Typography>
-                    <Box display="flex" flexDirection="column" gap={2}>
-                      {business.twitterUrl && (
+                    <Typography variant="h6" gutterBottom>Business Identity</Typography>
+                    <Box display="flex" flexDirection="column" gap={1.5}>
+                      <InfoRow label="Business Name" value={business.name} fromReg />
+                      <InfoRow label="Business Reg. No." value={business.registrationNumber} fromReg />
+                      <InfoRow label="KRA PIN" value={business.kraPin} fromReg />
+                      <InfoRow label="Date of Incorporation" value={business.dateOfIncorporation} fromReg />
+                      <InfoRow label="Legal Structure" value={business.legalStructure} fromReg />
+                      <InfoRow label="Kenyan National ID" value={business.kenyanNationalId} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Sector & Products */}
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Sector & Products</Typography>
+                    <Box display="flex" flexDirection="column" gap={1.5}>
+                      <InfoRow label="Industry" value={business.industry} fromReg />
+                      <InfoRow label="Sector" value={business.sector} fromReg />
+                      <InfoRow label="Products / Services" value={business.serviceOffering} fromReg />
+                      <InfoRow label="Product HS Code" value={business.productHsCode} />
+                      <InfoRow label="Business Organisation" value={business.businessUserOrganisation} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Primary Contact */}
+              <Grid item xs={12}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Primary Contact (from Registration)</Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <InfoRow label="First Name" value={business.primaryContactFirstName} fromReg />
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <InfoRow label="Last Name" value={business.primaryContactLastName} fromReg />
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <InfoRow label="Email" value={business.primaryContactEmail} fromReg />
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <InfoRow label="Phone" value={business.primaryContactPhone} fromReg />
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Account Owner */}
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Account Owner</Typography>
+                    <Box display="flex" flexDirection="column" gap={1.5}>
+                      <InfoRow label="Name" value={`${business.owner?.firstName || ''} ${business.owner?.lastName || ''}`.trim()} />
+                      <InfoRow label="Email" value={business.owner?.email} />
+                      <InfoRow label="Phone" value={business.owner?.phoneNumber} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Submission Timeline */}
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Submission</Typography>
+                    <Box display="flex" flexDirection="column" gap={1.5}>
+                      <InfoRow label="Submitted On" value={new Date(business.createdAt).toLocaleString()} />
+                      {business.updatedAt && <InfoRow label="Last Updated" value={new Date(business.updatedAt).toLocaleString()} />}
+                      <InfoRow label="Verification Status" value={business.verificationStatus} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          )}
+
+          {/* TAB 1 — Business Details */}
+          {detailsTabValue === 1 && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Company Details</Typography>
+                    <Box display="flex" flexDirection="column" gap={1.5}>
+                      <InfoRow label="Year Established" value={business.yearEstablished} />
+                      <InfoRow label="Number of Employees" value={business.numberOfEmployees} />
+                      <InfoRow label="Company Size" value={business.companySize} />
+                      <InfoRow label="Export License No." value={business.exportLicense} />
+                      <InfoRow label="Licence Number" value={business.licenceNumber} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Company Story</Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {business.companyStory || 'No company story provided.'}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Products & Certifications</Typography>
+                    <Box display="flex" gap={4}>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">Total Products</Typography>
+                        <Typography variant="body2">{business.products?.length || 0}</Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2" color="textSecondary">Total Certifications</Typography>
+                        <Typography variant="body2">{business.certifications?.length || 0}</Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          )}
+
+          {/* TAB 2 — Location & Contact */}
+          {detailsTabValue === 2 && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Location</Typography>
+                    <Box display="flex" flexDirection="column" gap={1.5}>
+                      <InfoRow label="Physical Address" value={business.physicalAddress} fromReg />
+                      <InfoRow label="Town / City" value={business.town} fromReg />
+                      <InfoRow label="County" value={business.county} fromReg />
+                      <InfoRow label="Country" value={business.country || 'Kenya'} />
+                      {coordinates && (
                         <Box>
-                          <Typography variant="subtitle2" color="textSecondary">Twitter</Typography>
-                          <Typography variant="body2">
-                            <a href={business.twitterUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
-                              {business.twitterUrl}
-                            </a>
-                          </Typography>
-                        </Box>
-                      )}
-                      {business.instagramUrl && (
-                        <Box>
-                          <Typography variant="subtitle2" color="textSecondary">Instagram</Typography>
-                          <Typography variant="body2">
-                            <a href={business.instagramUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
-                              {business.instagramUrl}
-                            </a>
-                          </Typography>
+                          <Typography variant="subtitle2" color="textSecondary">GPS Coordinates</Typography>
+                          <Typography variant="body2">Lat: {coordinates.lat.toFixed(6)}, Lng: {coordinates.lng.toFixed(6)}</Typography>
                         </Box>
                       )}
                     </Box>
                   </CardContent>
                 </Card>
               </Grid>
-            )}
 
-            {/* Owner Information */}
-            <Grid item xs={12} md={business.twitterUrl || business.instagramUrl ? 6 : 12}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Owner Information</Typography>
-                  <Box display="flex" flexDirection="column" gap={2}>
-                    <Box>
-                      <Typography variant="subtitle2" color="textSecondary">Name</Typography>
-                      <Typography variant="body2">
-                        {business.owner?.firstName} {business.owner?.lastName}
-                      </Typography>
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Contact</Typography>
+                    <Box display="flex" flexDirection="column" gap={1.5}>
+                      <InfoRow label="Company Email" value={business.companyEmail} fromReg />
+                      <InfoRow label="Contact Phone" value={business.contactPhone} fromReg />
+                      <InfoRow label="Mobile Number" value={business.mobileNumber} />
+                      <InfoRow label="WhatsApp" value={business.whatsappNumber} />
+                      <InfoRow label="Website" value={business.website} />
                     </Box>
-                    {business.owner?.email && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Email</Typography>
-                        <Typography variant="body2">{business.owner.email}</Typography>
-                      </Box>
-                    )}
-                    {business.owner?.phoneNumber && (
-                      <Box>
-                        <Typography variant="subtitle2" color="textSecondary">Phone</Typography>
-                        <Typography variant="body2">{business.owner.phoneNumber}</Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-            {/* Products & Certifications Summary */}
-            <Grid item xs={12}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Products & Certifications</Typography>
-                  <Box display="flex" gap={4}>
-                    <Box>
-                      <Typography variant="subtitle2" color="textSecondary">Total Products</Typography>
-                      <Typography variant="body2">{business.products?.length || 0}</Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" color="textSecondary">Total Certifications</Typography>
-                      <Typography variant="body2">{business.certifications?.length || 0}</Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
+              {(business.twitterUrl || business.instagramUrl) && (
+                <Grid item xs={12} md={6}>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>Social Media</Typography>
+                      <Box display="flex" flexDirection="column" gap={1.5}>
+                        <InfoRow label="Twitter" value={business.twitterUrl} />
+                        <InfoRow label="Instagram" value={business.instagramUrl} />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
             </Grid>
-          </Grid>
           )}
 
-          {detailsTabValue === 1 && (
+          {/* TAB 3 — Documents */}
+          {detailsTabValue === 3 && (
             <Grid container spacing={2}>
-              {business.registrationCertificateUrl && (
-                <Grid item xs={12} md={6}>
+              {[
+                { label: 'Registration Certificate', url: business.registrationCertificateUrl },
+                { label: 'PIN Certificate', url: business.pinCertificateUrl },
+                { label: 'Kenyan National ID', url: business.kenyanNationalIdUrl },
+                { label: 'Certificate of Incorporation', url: business.incorporationCertificateUrl },
+                { label: 'Export License', url: business.exportLicenseUrl },
+              ].map(({ label, url }) => url ? (
+                <Grid item xs={12} sm={6} key={label}>
                   <Card variant="outlined">
                     <CardContent>
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <FileTextIcon className="text-blue-500" />
-                        <Typography variant="subtitle2">Registration Certificate</Typography>
+                      <Box display="flex" alignItems="center" gap={1} mb={1}>
+                        <FileTextIcon size={18} style={{ color: '#3b82f6' }} />
+                        <Typography variant="subtitle2">{label}</Typography>
                       </Box>
-                      <Button 
-                        size="small" 
-                        startIcon={<DownloadIcon />}
-                        href={business.registrationCertificateUrl}
-                        target="_blank"
-                        sx={{ mt: 1 }}
-                      >
-                        View/Download
+                      <Button size="small" startIcon={<DownloadIcon size={14} />} href={url} target="_blank" rel="noopener noreferrer">
+                        View / Download
                       </Button>
                     </CardContent>
                   </Card>
                 </Grid>
-              )}
-              {business.pinCertificateUrl && (
-                <Grid item xs={12} md={6}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <FileTextIcon className="text-blue-500" />
-                        <Typography variant="subtitle2">PIN Certificate</Typography>
-                      </Box>
-                      <Button 
-                        size="small" 
-                        startIcon={<DownloadIcon />}
-                        href={business.pinCertificateUrl}
-                        target="_blank"
-                        sx={{ mt: 1 }}
-                      >
-                        View/Download
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )}
-              {business.incorporationCertificateUrl && (
-                <Grid item xs={12} md={6}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <FileTextIcon className="text-blue-500" />
-                        <Typography variant="subtitle2">Kenya Certificate of Incorporation</Typography>
-                      </Box>
-                      <Button 
-                        size="small" 
-                        startIcon={<DownloadIcon />}
-                        href={business.incorporationCertificateUrl}
-                        target="_blank"
-                        sx={{ mt: 1 }}
-                      >
-                        View/Download
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )}
-              {!business.registrationCertificateUrl && !business.pinCertificateUrl && !business.incorporationCertificateUrl && (
+              ) : null)}
+              {docCount === 0 && (
                 <Grid item xs={12}>
                   <Box textAlign="center" py={4}>
                     <FileTextIcon size={48} style={{ color: '#ccc', marginBottom: 16 }} />
-                    <Typography variant="body2" color="textSecondary">
-                      No documents uploaded yet
-                    </Typography>
+                    <Typography variant="body2" color="textSecondary">No documents uploaded yet</Typography>
                   </Box>
                 </Grid>
               )}
             </Grid>
           )}
 
-          {detailsTabValue === 2 && (
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="h6" gutterBottom>Verification Timeline</Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Box display="flex" alignItems="flex-start" gap={2} mb={3}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'warning.main' }} />
-                      <Box sx={{ width: 2, flexGrow: 1, bgcolor: 'grey.300' }} />
+          {/* TAB 4 — Export & Capacity */}
+          {detailsTabValue === 4 && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Export Information</Typography>
+                    <Box display="flex" flexDirection="column" gap={1.5}>
+                      <InfoRow label="Export Markets" value={business.currentExportMarkets} />
+                      <InfoRow label="Export Volume (Past 3 Years)" value={business.exportVolumePast3Years} />
+                      <InfoRow label="Production Capacity (Past 3 Years)" value={business.productionCapacityPast3} />
                     </Box>
-                    <Box>
-                      <Typography variant="subtitle2">Verification Pending</Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        Submitted on {new Date(business.createdAt).toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box display="flex" alignItems="flex-start" gap={2}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'grey.300' }} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2">Awaiting Admin Review</Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        Your application is in the queue
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
           )}
         </DialogContent>
-        
+
         <DialogActions>
           <Button onClick={onClose}>Close</Button>
-          <Button
-            color="error"
-            startIcon={<CancelIcon size={16} />}
-            onClick={() => {
-              setShowRejectDialog(business);
-              onClose();
-            }}
-            disabled={isVerifying === business.id}
-          >
+          <Button color="error" startIcon={<CancelIcon size={16} />}
+            onClick={() => { setShowRejectDialog(business); onClose(); }}
+            disabled={isVerifying === business.id}>
             Reject
           </Button>
-          <Button
-            color="success"
-            variant="contained"
-            startIcon={<CheckCircleIcon size={16} />}
+          <Button color="success" variant="contained" startIcon={<CheckCircleIcon size={16} />}
             onClick={() => handleVerification(business.id, business.name, 'VERIFIED')}
-            disabled={isVerifying === business.id}
-          >
+            disabled={isVerifying === business.id}>
             {isVerifying === business.id ? 'Verifying...' : 'Approve'}
           </Button>
         </DialogActions>
@@ -787,53 +529,39 @@ export function BusinessVerificationTab() {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">
-          Business Verification ({filteredBusinesses.length} businesses)
-        </Typography>
-        <Button variant="outlined" onClick={fetchBusinesses} disabled={isLoading}>
-          Refresh
-        </Button>
+        <Typography variant="h6">Business Verification ({filteredBusinesses.length} businesses)</Typography>
+        <Button variant="outlined" onClick={fetchBusinesses} disabled={isLoading}>Refresh</Button>
       </Box>
-      
-      {/* Search and Filter Controls */}
+
       <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <TextField
-          placeholder="Search by name, email, sector..."
+          placeholder="Search by name, email, KRA PIN, reg no..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           size="small"
-          sx={{ minWidth: 250 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon size={20} />
-              </InputAdornment>
-            ),
-          }}
+          sx={{ minWidth: 280 }}
+          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon size={20} /></InputAdornment> }}
         />
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Status</InputLabel>
-          <Select
-            value={statusFilter}
-            label="Status"
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
+          <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
             <MenuItem value="PENDING">Pending</MenuItem>
             <MenuItem value="VERIFIED">Verified</MenuItem>
             <MenuItem value="REJECTED">Rejected</MenuItem>
-            <MenuItem value="ALL">All Status</MenuItem>
+            <MenuItem value="ALL">All</MenuItem>
           </Select>
         </FormControl>
       </Box>
-      
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Business</TableCell>
               <TableCell>Owner</TableCell>
+              <TableCell>Reg. No. / KRA PIN</TableCell>
+              <TableCell>Sector / Industry</TableCell>
               <TableCell>Location</TableCell>
-              <TableCell>Sector</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -841,12 +569,10 @@ export function BusinessVerificationTab() {
           <TableBody>
             {filteredBusinesses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   <Box py={4}>
                     <BusinessIcon size={48} style={{ color: '#ccc', marginBottom: 16 }} />
-                    <Typography variant="body2" color="textSecondary">
-                      No businesses found matching your criteria
-                    </Typography>
+                    <Typography variant="body2" color="textSecondary">No businesses found</Typography>
                   </Box>
                 </TableCell>
               </TableRow>
@@ -854,72 +580,64 @@ export function BusinessVerificationTab() {
               filteredBusinesses.map((business) => (
                 <TableRow key={business.id}>
                   <TableCell>
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Avatar src={business.logoUrl} alt={business.name}>
+                    <Box display="flex" alignItems="center" gap={1.5}>
+                      <Avatar src={business.logoUrl} alt={business.name} sx={{ width: 36, height: 36 }}>
                         {business.name.charAt(0)}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2">{business.name}</Typography>
                         <Typography variant="caption" color="textSecondary">
-                          Created {new Date(business.createdAt).toLocaleDateString()}
+                          {new Date(business.createdAt).toLocaleDateString()}
                         </Typography>
                       </Box>
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      {business.owner?.firstName} {business.owner?.lastName}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      {business.contactEmail}
-                    </Typography>
+                    <Typography variant="body2">{business.owner?.firstName} {business.owner?.lastName}</Typography>
+                    <Typography variant="caption" color="textSecondary">{business.owner?.email || business.contactEmail}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <LocationOnIcon size={16} />
-                      <Typography variant="body2">{business.location}</Typography>
-                    </Box>
+                    {business.registrationNumber && (
+                      <Typography variant="body2">{business.registrationNumber}</Typography>
+                    )}
+                    {business.kraPin && (
+                      <Typography variant="caption" color="textSecondary">{business.kraPin}</Typography>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">{business.sector}</Typography>
+                    {business.industry && (
+                      <Typography variant="caption" color="textSecondary">{business.industry}</Typography>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Chip 
-                      label={business.verificationStatus} 
-                      color={getStatusColor(business.verificationStatus)}
-                      size="small"
-                    />
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      <LocationOnIcon size={14} />
+                      <Typography variant="body2">{business.town || business.location}</Typography>
+                    </Box>
+                    {business.county && (
+                      <Typography variant="caption" color="textSecondary">{business.county}</Typography>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Box display="flex" gap={1}>
-                      <Button
-                        size="small"
-                        startIcon={<VisibilityIcon size={16} />}
-                        onClick={() => {
-                          setSelectedBusiness(business);
-                          setDetailsTabValue(0);
-                        }}
-                      >
+                    <Chip label={business.verificationStatus} color={getStatusColor(business.verificationStatus)} size="small" />
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" gap={0.5} flexWrap="wrap">
+                      <Button size="small" startIcon={<VisibilityIcon size={14} />}
+                        onClick={() => { setSelectedBusiness(business); setDetailsTabValue(0); }}>
                         View
                       </Button>
                       {business.verificationStatus === 'PENDING' && (
                         <>
-                          <Button
-                            size="small"
-                            color="success"
-                            startIcon={<CheckCircleIcon size={16} />}
+                          <Button size="small" color="success" startIcon={<CheckCircleIcon size={14} />}
                             onClick={() => handleVerification(business.id, business.name, 'VERIFIED')}
-                            disabled={isVerifying === business.id}
-                          >
+                            disabled={isVerifying === business.id}>
                             {isVerifying === business.id ? '...' : 'Approve'}
                           </Button>
-                          <Button
-                            size="small"
-                            color="error"
-                            startIcon={<CancelIcon size={16} />}
+                          <Button size="small" color="error" startIcon={<CancelIcon size={14} />}
                             onClick={() => setShowRejectDialog(business)}
-                            disabled={isVerifying === business.id}
-                          >
+                            disabled={isVerifying === business.id}>
                             Reject
                           </Button>
                         </>
@@ -934,13 +652,8 @@ export function BusinessVerificationTab() {
       </TableContainer>
 
       {selectedBusiness && (
-        <BusinessDetailsDialog
-          business={selectedBusiness}
-          open={!!selectedBusiness}
-          onClose={() => setSelectedBusiness(null)}
-        />
+        <BusinessDetailsDialog business={selectedBusiness} open={!!selectedBusiness} onClose={() => setSelectedBusiness(null)} />
       )}
-
       <RejectionReasonDialog />
     </Box>
   );

@@ -25,7 +25,7 @@ async function verifyAdminToken(request: NextRequest): Promise<{ userId: string;
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string; role: string };
-    if (decoded.role !== 'ADMIN') {
+    if (decoded.role !== 'ADMIN' && decoded.role !== 'SUPER_ADMIN') {
       return null;
     }
     return decoded;
