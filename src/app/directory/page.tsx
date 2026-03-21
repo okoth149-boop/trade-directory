@@ -48,9 +48,6 @@ const filterCategories = [
     'ISO 9001', 'ISO 14001', 'Fair Trade', 'GlobalG.A.P.', 'Organic Certified',
     'HACCP', 'KEBS Mark of Quality', 'Rainforest Alliance', 'Made in Kenya',
   ] },
-  { id: 'rating', name: 'Rating', options: [
-    '4 stars & up', '3 stars & up', '2 stars & up', '1 star & up',
-  ] },
 ];
 
 const MapView = dynamicImport(() => import('@/components/map-view').then((mod) => mod.MapView), {
@@ -274,6 +271,25 @@ const Filters = ({
               <p className="text-xs text-gray-500 mt-1">Search by service type keyword</p>
             </AccordionContent>
           </AccordionItem>
+          {viewMode !== 'map' && (
+            <AccordionItem value="rating">
+              <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">Rating</AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="space-y-2 px-4 pb-2">
+                  {['4 stars & up', '3 stars & up', '2 stars & up', '1 star & up'].map(option => (
+                    <div key={option} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`rating-${option}`}
+                        checked={selectedFilters['rating']?.includes(option) || false}
+                        onCheckedChange={() => onFilterChange('rating', option)}
+                      />
+                      <Label htmlFor={`rating-${option}`} className="font-normal cursor-pointer flex-grow py-1">{option}</Label>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
         </Accordion>
       </ScrollArea>
       {activeFilterCount > 0 && (
