@@ -152,10 +152,9 @@ export function DocumentPreviewDialog({
     county: business?.county || 'N/A',
     town: business?.town || 'N/A',
     sector: business?.sector || 'N/A',
-    typeOfBusiness: business?.typeOfBusiness || 'N/A',
     companySize: business?.companySize || 'N/A',
     numberOfEmployees: business?.numberOfEmployees || 'N/A',
-    yearEstablished: business?.yearEstablished || 'N/A',
+    dateOfIncorporation: business?.dateOfIncorporation || 'N/A',
     registrationNumber: business?.registrationNumber || 'N/A',
     kraPin: business?.kraPin || 'N/A',
     taxId: business?.taxId || 'N/A',
@@ -249,8 +248,8 @@ export function DocumentPreviewDialog({
                   <span className="font-medium truncate">{businessData.numberOfEmployees}</span>
                 </div>
                 <div className="flex gap-1">
-                  <span className="text-gray-500 dark:text-gray-400 shrink-0">Established:</span>
-                  <span className="font-medium truncate">{businessData.yearEstablished}</span>
+                  <span className="text-gray-500 dark:text-gray-400 shrink-0">Incorporated:</span>
+                  <span className="font-medium truncate">{businessData.dateOfIncorporation}</span>
                 </div>
                 <div className="flex gap-1">
                   <span className="text-gray-500 dark:text-gray-400 shrink-0">Reg #:</span>
@@ -259,10 +258,6 @@ export function DocumentPreviewDialog({
                 <div className="flex gap-1">
                   <span className="text-gray-500 dark:text-gray-400 shrink-0">KRA PIN:</span>
                   <span className="font-medium truncate">{businessData.kraPin}</span>
-                </div>
-                <div className="flex gap-1">
-                  <span className="text-gray-500 dark:text-gray-400 shrink-0">Tax ID:</span>
-                  <span className="font-medium truncate">{businessData.taxId}</span>
                 </div>
                 <div className="flex gap-1">
                   <span className="text-gray-500 dark:text-gray-400 shrink-0">License #:</span>

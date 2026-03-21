@@ -217,7 +217,7 @@ export default function ExporterDashboard() {
       
       // Define required fields (matching the business profile form)
       const requiredFields = [
-        'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness', 'yearEstablished',
+        'kenyanNationalId', 'name', 'logoUrl',
         'numberOfEmployees', 'kraPin', 'sector', 'businessUserOrganisation',
         'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
         'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'
@@ -227,7 +227,7 @@ export default function ExporterDashboard() {
       const optionalFields = [
         'website', 'whatsappNumber', 'twitterUrl', 'instagramUrl', 'coordinates',
         'exportVolumePast3Years', 'currentExportMarkets', 'productionCapacityPast3',
-        'companyStory', 'registrationNumber', 'taxId', 'mobileNumber', 'companySize'
+        'companyStory', 'registrationNumber', 'mobileNumber', 'companySize'
       ];
       
       // Count completed required fields

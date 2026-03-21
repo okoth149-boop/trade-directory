@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate profile completion
     const requiredFields = [
-      'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness', 'yearEstablished',
+      'kenyanNationalId', 'name', 'logoUrl',
       'numberOfEmployees', 'kraPin', 'sector', 'businessUserOrganisation',
       'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
       'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'
@@ -138,13 +138,10 @@ export async function POST(request: NextRequest) {
         // Business Details
         businessPurpose: businessData.businessPurpose,
         dateOfIncorporation: businessData.dateOfIncorporation,
-        typeOfBusiness: businessData.typeOfBusiness,
         legalStructure: businessData.legalStructure,
-        yearEstablished: businessData.yearEstablished,
         numberOfEmployees: businessData.numberOfEmployees,
         companySize: businessData.companySize,
         registrationNumber: businessData.registrationNumber,
-        taxId: businessData.taxId,
         exportLicense: businessData.exportLicense,
         kraPin: businessData.kraPin,
         sector: businessData.sector,
