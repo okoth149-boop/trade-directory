@@ -486,14 +486,10 @@ export function BusinessProfileForm({
     return new Date(date) <= threeMonthsFromNow && !isExpired(date);
   };
 
-  // Helper: read-only field pre-filled from registration
-  const FromRegField = ({ value, label }: { value: string; label?: string }) => (
-    <div className="mt-1 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-      <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-      </svg>
-      <span className="flex-1">{value || <span className="text-gray-400 italic">Not provided</span>}</span>
-      <span className="text-xs text-amber-600 dark:text-amber-400 whitespace-nowrap">From registration</span>
+  // Helper: read-only field pre-filled from registration — styled as a plain disabled input
+  const FromRegField = ({ value }: { value: string; label?: string }) => (
+    <div className="mt-1 h-10 px-3 flex items-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 cursor-not-allowed select-none">
+      <span className="flex-1 truncate">{value || <span className="text-gray-400">—</span>}</span>
     </div>
   );
 
@@ -565,13 +561,6 @@ export function BusinessProfileForm({
       case 1: // Business Details
         return (
           <div className="space-y-6">
-            {/* Read-only notice */}
-            <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md text-sm text-amber-800 dark:text-amber-300">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span>Fields marked "From registration" are managed in your Exporter Registration and cannot be edited here.</span>
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -762,13 +751,6 @@ export function BusinessProfileForm({
       case 3: // Location & Contact
         return (
           <div className="space-y-6">
-            <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md text-sm text-amber-800 dark:text-amber-300">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span>Location and contact fields are pre-filled from your registration and cannot be edited here.</span>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="licenceNumber">Export License No. *</Label>
@@ -850,9 +832,8 @@ export function BusinessProfileForm({
               </div>
             </div>
 
-            {/* Primary Contact — read-only from registration */}
             <div className="border-t pt-4">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Primary Contact (from registration)</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Primary Contact</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>First Name</Label>
