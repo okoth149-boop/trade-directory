@@ -1156,9 +1156,6 @@ function RegisterPageContent({
                       {/* Exporter: pre-fill name/email/phone from primary contact */}
                       {selectedRole === 'exporter' && (
                         <div className="space-y-3">
-                          <p className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                            Pre-filled from your primary contact details. You can edit any field if your account details differ.
-                          </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField control={form.control} name="firstName" render={({ field }) => {
                               // Sync from primary contact if still empty
