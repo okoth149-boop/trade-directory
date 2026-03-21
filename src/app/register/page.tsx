@@ -1132,124 +1132,95 @@ function RegisterPageContent({
                       <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
                         {selectedRole === 'exporter' ? 'Account Credentials' : 'Personal & Account Information'}
                       </h3>
-                      
+
+                      {/* Buyer: collect name manually */}
                       {selectedRole === 'buyer' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField 
-                            control={form.control} 
-                            name="firstName" 
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-gray-900 font-medium">First Name <span className="text-red-500">*</span></FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="John" 
-                                    {...field} 
-                                    className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} 
-                          />
-                          <FormField 
-                            control={form.control} 
-                            name="lastName" 
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-gray-900 font-medium">Last Name <span className="text-red-500">*</span></FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Doe" 
-                                    {...field} 
-                                    className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} 
-                          />
+                          <FormField control={form.control} name="firstName" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-900 font-medium">First Name <span className="text-red-500">*</span></FormLabel>
+                              <FormControl><Input placeholder="John" {...field} className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="lastName" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-900 font-medium">Last Name <span className="text-red-500">*</span></FormLabel>
+                              <FormControl><Input placeholder="Doe" {...field} className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
                         </div>
                       )}
 
+                      {/* Exporter: pre-fill name/email/phone from primary contact */}
                       {selectedRole === 'exporter' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField 
-                            control={form.control} 
-                            name="firstName" 
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-gray-900 font-medium">First Name <span className="text-red-500">*</span></FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="John" 
-                                    {...field} 
-                                    className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} 
-                          />
-                          <FormField 
-                            control={form.control} 
-                            name="lastName" 
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-gray-900 font-medium">Last Name <span className="text-red-500">*</span></FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Doe" 
-                                    {...field} 
-                                    className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} 
-                          />
+                        <div className="space-y-3">
+                          <p className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+                            Pre-filled from your primary contact details. You can edit any field if your account details differ.
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField control={form.control} name="firstName" render={({ field }) => {
+                              // Sync from primary contact if still empty
+                              const pc = form.watch('primaryContactFirstName');
+                              if (pc && !field.value) { setTimeout(() => field.onChange(pc), 0); }
+                              return (
+                                <FormItem>
+                                  <FormLabel className="text-gray-900 font-medium">First Name <span className="text-red-500">*</span></FormLabel>
+                                  <FormControl><Input placeholder="John" {...field} className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500" /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              );
+                            }} />
+                            <FormField control={form.control} name="lastName" render={({ field }) => {
+                              const pc = form.watch('primaryContactLastName');
+                              if (pc && !field.value) { setTimeout(() => field.onChange(pc), 0); }
+                              return (
+                                <FormItem>
+                                  <FormLabel className="text-gray-900 font-medium">Last Name <span className="text-red-500">*</span></FormLabel>
+                                  <FormControl><Input placeholder="Doe" {...field} className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500" /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              );
+                            }} />
+                          </div>
                         </div>
                       )}
 
-                      <FormField 
-                        control={form.control} 
-                        name="email" 
-                        render={({ field }) => (
+                      <FormField control={form.control} name="email" render={({ field }) => {
+                        if (selectedRole === 'exporter') {
+                          const pc = form.watch('primaryContactEmail');
+                          if (pc && !field.value) { setTimeout(() => field.onChange(pc), 0); }
+                        }
+                        return (
                           <FormItem>
                             <FormLabel className="text-gray-900 font-medium">Email Address <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
-                              <Input 
-                                type="email"
-                                placeholder="you@company.com" 
-                                {...field} 
-                                className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                              />
+                              <Input type="email" placeholder="you@company.com" {...field} className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
-                        )} 
-                      />
+                        );
+                      }} />
 
-                      <FormField 
-                        control={form.control} 
-                        name="phoneNumber" 
-                        render={({ field }) => (
+                      <FormField control={form.control} name="phoneNumber" render={({ field }) => {
+                        if (selectedRole === 'exporter') {
+                          const pc = form.watch('primaryContactPhone');
+                          if (pc && !field.value) { setTimeout(() => field.onChange(pc), 0); }
+                        }
+                        return (
                           <FormItem>
                             <FormLabel className="text-gray-900 font-medium">
                               Phone Number <span className="text-gray-500 text-sm">(Optional)</span>
                             </FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="+254712345678 or 0712345678" 
-                                {...field} 
-                                className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                              />
+                              <Input placeholder="+254712345678 or 0712345678" {...field} className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500" />
                             </FormControl>
                             <p className="text-xs text-gray-500">Add phone for SMS verification during login</p>
                             <FormMessage />
                           </FormItem>
-                        )} 
-                      />
+                        );
+                      }} />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
