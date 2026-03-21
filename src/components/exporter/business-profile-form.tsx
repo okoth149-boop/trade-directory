@@ -53,7 +53,7 @@ const businessFormSchema = z.object({
   
   // Business Details
   typeOfBusiness: z.string().min(1, 'Type of business is required'),
-  yearEstablished: z.string().min(4, 'Year established is required'),
+  yearEstablished: z.string().optional(),
   numberOfEmployees: z.string().min(1, 'Number of employees is required'),
   companySize: z.string().optional(),
   kraPin: z.string().min(1, 'KRA PIN is required'),
@@ -121,6 +121,7 @@ interface BusinessProfileFormProps {
     primaryContactLastName?: string;
     primaryContactEmail?: string;
     primaryContactPhone?: string;
+    dateOfIncorporation?: string;
   };
   isLoading?: boolean;
 }
@@ -271,7 +272,7 @@ export function BusinessProfileForm({
   // Calculate completion percentage
   useEffect(() => {
     const requiredFields = [
-      'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness', 'yearEstablished',
+      'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness',
       'numberOfEmployees', 'kraPin', 'sector',
       'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
       'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail', 'coordinates'
@@ -306,7 +307,7 @@ export function BusinessProfileForm({
     {
       title: 'Business Details',
       icon: FileText,
-      fields: ['typeOfBusiness', 'yearEstablished', 'numberOfEmployees', 'kraPin', 'sector']
+      fields: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector']
     },
     {
       title: 'Documents',
@@ -356,7 +357,7 @@ export function BusinessProfileForm({
   // Define required fields for each section
   const sectionRequiredFields: Record<number, string[]> = {
     0: ['kenyanNationalId', 'name', 'logoUrl'], // Basic Details
-    1: ['typeOfBusiness', 'yearEstablished', 'numberOfEmployees', 'kraPin', 'sector'], // Business Details
+    1: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector'], // Business Details
     2: ['registrationCertificateUrl', 'pinCertificateUrl'], // Documents (exportLicenseUrl is optional)
     3: ['licenceNumber', 'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'], // Location & Contact
     4: ['coordinates'], // Social Media & Location (coordinates is now required)
@@ -594,21 +595,8 @@ export function BusinessProfileForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="yearEstablished">Year of Registration/Incorporation *</Label>
-                <Input
-                  id="yearEstablished"
-                  {...form.register('yearEstablished')}
-                  placeholder="YYYY"
-                  type="number"
-                  min="1900"
-                  max={new Date().getFullYear()}
-                  className="mt-1"
-                />
-                {form.formState.errors.yearEstablished && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.yearEstablished.message}
-                  </p>
-                )}
+                <Label>Date of Incorporation</Label>
+                <FromRegField value={registrationData?.dateOfIncorporation || ''} />
               </div>
 
               <div>

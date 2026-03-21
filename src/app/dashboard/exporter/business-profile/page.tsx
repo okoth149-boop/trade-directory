@@ -245,6 +245,7 @@ export default function BusinessProfilePage() {
             primaryContactLastName: business?.primaryContactLastName || '',
             primaryContactEmail: business?.primaryContactEmail || '',
             primaryContactPhone: business?.primaryContactPhone || '',
+            dateOfIncorporation: business?.dateOfIncorporation || '',
           }}
           isLoading={isSubmitting}
         />

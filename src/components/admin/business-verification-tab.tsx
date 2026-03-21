@@ -52,7 +52,6 @@ interface Business {
   businessUserOrganisation?: string;
   companySize?: string;
   numberOfEmployees?: string;
-  yearEstablished?: string;
   mobileNumber?: string;
   whatsappNumber?: string;
   website?: string;
@@ -352,7 +351,6 @@ export function BusinessVerificationTab() {
                   <CardContent>
                     <Typography variant="h6" gutterBottom>Company Details</Typography>
                     <Box display="flex" flexDirection="column" gap={1.5}>
-                      <InfoRow label="Year Established" value={business.yearEstablished} />
                       <InfoRow label="Number of Employees" value={business.numberOfEmployees} />
                       <InfoRow label="Company Size" value={business.companySize} />
                       <InfoRow label="Export License No." value={business.exportLicense} />

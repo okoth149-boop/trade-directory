@@ -260,6 +260,7 @@ const REGISTRATION_OWNED_FIELDS = [
   'registrationNumber',
   'kraPin',
   'dateOfIncorporation',
+  'yearEstablished',
   'legalStructure',
   'industry',
   'sector',
@@ -311,7 +312,7 @@ export async function PUT(request: NextRequest) {
 
     // Calculate profile completion — check against existing business for reg-owned fields
     const editableRequiredFields = [
-      'kenyanNationalId', 'logoUrl', 'yearEstablished',
+      'kenyanNationalId', 'logoUrl',
       'numberOfEmployees', 'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
       'coordinates',
     ];
