@@ -770,7 +770,7 @@ function RegisterPageContent({
                                       setLegalOtherText('');
                                     }
                                   }}
-                                  options={[...LEGAL_STRUCTURE_OPTIONS, { value: 'Other', label: 'Other' }]}
+                                  options={LEGAL_STRUCTURE_OPTIONS}
                                   placeholder="Select legal structure"
                                   search={legalSearch}
                                   setSearch={setLegalSearch}
