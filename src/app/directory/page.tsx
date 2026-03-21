@@ -643,6 +643,14 @@ function DirectoryPageContentClient() {
               const loc = (business.county || business.location || '').toLowerCase();
               return values.some(v => loc.includes(v.toLowerCase()));
             }
+            case 'town': {
+              const t = (business.town || '').toLowerCase();
+              return values.some(v => t.includes(v.toLowerCase()));
+            }
+            case 'industry': {
+              const ind = (business.industry || '').toLowerCase();
+              return values.some(v => ind === v.toLowerCase());
+            }
             case 'sector': {
               const s = (business.sector || '').toLowerCase();
               return values.some(v => s === v.toLowerCase());
