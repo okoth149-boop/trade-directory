@@ -73,7 +73,7 @@ const businessFormSchema = z.object({
   exportLicenseUrl: z.string().optional(),
   
   // Location & Contact
-  licenceNumber: z.string().min(1, 'Licence number is required'),
+  licenceNumber: z.string().optional(),
   town: z.string().min(1, 'Town is required'),
   county: z.string().min(1, 'County is required'),
   physicalAddress: z.string().min(1, 'Physical address is required'),
@@ -282,7 +282,7 @@ export function BusinessProfileForm({
     const requiredFields = [
       'kenyanNationalId', 'name', 'logoUrl',
       'numberOfEmployees', 'kraPin', 'sector',
-      'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
+      'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicense',
       'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail', 'coordinates'
     ];
     
@@ -315,7 +315,7 @@ export function BusinessProfileForm({
     {
       title: 'Business Details',
       icon: FileText,
-      fields: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector', 'licenceNumber']
+      fields: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector']
     },
     {
       title: 'Documents',
@@ -343,6 +343,8 @@ export function BusinessProfileForm({
     try {
       const dataWithCertifications = {
         ...data,
+        // Mirror exportLicense into licenceNumber so the DB field stays populated
+        licenceNumber: data.exportLicense || data.licenceNumber || '',
         certifications,
         _certificationsUpdated: true,
         _isFinalSave: true,
@@ -365,7 +367,7 @@ export function BusinessProfileForm({
   // Define required fields for each section
   const sectionRequiredFields: Record<number, string[]> = {
     0: ['kenyanNationalId', 'name', 'logoUrl'], // Basic Details
-    1: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector', 'licenceNumber'], // Business Details
+    1: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector'], // Business Details
     2: ['registrationCertificateUrl', 'pinCertificateUrl'], // Documents (exportLicenseUrl is optional)
     3: ['town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'], // Location & Contact
     4: ['coordinates'], // Social Media & Location (coordinates is now required)
@@ -679,21 +681,6 @@ export function BusinessProfileForm({
                 />
               </div>
 
-              <div>
-                <Label htmlFor="licenceNumber">Licence Number *</Label>
-                <Input
-                  id="licenceNumber"
-                  {...form.register('licenceNumber')}
-                  placeholder="Enter licence number"
-                  className="mt-1"
-                />
-                {form.formState.errors.licenceNumber && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.licenceNumber.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="productHsCode">Product HS Code</Label>
                 <Input

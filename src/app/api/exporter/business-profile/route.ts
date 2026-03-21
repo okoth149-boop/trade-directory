@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     const requiredFields = [
       'kenyanNationalId', 'name', 'logoUrl',
       'numberOfEmployees', 'kraPin', 'sector', 'businessUserOrganisation',
-      'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
+      'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicense',
       'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'
     ];
 
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
         documentsUploadedAt: new Date(),
         
         // Location & Contact
-        licenceNumber: businessData.licenceNumber,
+        licenceNumber: businessData.exportLicense || businessData.licenceNumber,
         town: businessData.town,
         county: businessData.county,
         location: `${businessData.town}, ${businessData.county}`,
@@ -310,7 +310,7 @@ export async function PUT(request: NextRequest) {
     const editableRequiredFields = [
       'kenyanNationalId', 'logoUrl',
       'numberOfEmployees', 'kraPin',
-      'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
+      'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicense',
       'coordinates',
     ];
     const regOwnedRequired = ['name', 'sector', 'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'];
@@ -371,7 +371,7 @@ export async function PUT(request: NextRequest) {
         documentsUploadedAt: wasVerified ? new Date() : existingBusiness.documentsUploadedAt,
         
         // Location & Contact (editable only)
-        licenceNumber: businessData.licenceNumber,
+        licenceNumber: businessData.exportLicense || businessData.licenceNumber,
         website: businessData.website,
         mobileNumber: businessData.mobileNumber,
         whatsappNumber: businessData.whatsappNumber,

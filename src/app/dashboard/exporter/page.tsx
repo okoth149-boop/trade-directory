@@ -219,7 +219,7 @@ export default function ExporterDashboard() {
       const requiredFields = [
         'kenyanNationalId', 'name', 'logoUrl',
         'numberOfEmployees', 'kraPin', 'sector',
-        'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
+        'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicense',
         'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail',
         'coordinates',
       ];
