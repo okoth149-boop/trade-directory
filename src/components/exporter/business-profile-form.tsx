@@ -148,6 +148,9 @@ export function BusinessProfileForm({
     logoUrl: '',
   });
 
+  // Directors state
+  const [directors, setDirectors] = useState<{ name: string; role: string }[]>([]);
+
   // Load initial certifications if editing existing business
   useEffect(() => {
     if (initialData && (initialData as any).certifications) {
@@ -170,6 +173,13 @@ export function BusinessProfileForm({
     }
     if (initialData?.sector?.startsWith('Other:')) {
       setSectorOtherText(initialData.sector.replace('Other: ', ''));
+    }
+    // Parse directors from managementTeam JSON
+    if ((initialData as any)?.managementTeam) {
+      try {
+        const parsed = JSON.parse((initialData as any).managementTeam);
+        if (Array.isArray(parsed)) setDirectors(parsed);
+      } catch { /* ignore malformed */ }
     }
   }, []);
 
@@ -330,12 +340,12 @@ export function BusinessProfileForm({
 
   const handleSubmit = async (data: BusinessFormData) => {
     try {
-      // Include certifications + flag so API knows to update them (only on explicit save)
       const dataWithCertifications = {
         ...data,
         certifications,
         _certificationsUpdated: true,
         _isFinalSave: true,
+        managementTeam: directors.length > 0 ? JSON.stringify(directors) : null,
       };
       await onSubmit(dataWithCertifications as any);
       toast({
@@ -676,6 +686,64 @@ export function BusinessProfileForm({
                   placeholder="e.g., 0901.11"
                   className="mt-1"
                 />
+              </div>
+            </div>
+
+            {/* Directors */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Names of Directors</Label>
+                <button
+                  type="button"
+                  onClick={() => setDirectors(prev => [...prev, { name: '', role: '' }])}
+                  className="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Director
+                </button>
+              </div>
+
+              {directors.length === 0 && (
+                <p className="text-sm text-gray-400 italic py-2">No directors added yet. Click "Add Director" to begin.</p>
+              )}
+
+              <div className="space-y-2">
+                {directors.map((director, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <Input
+                      placeholder="Full name"
+                      value={director.name}
+                      onChange={(e) => {
+                        const updated = [...directors];
+                        updated[index] = { ...updated[index], name: e.target.value };
+                        setDirectors(updated);
+                      }}
+                      className="flex-1"
+                    />
+                    <Input
+                      placeholder="Role (e.g. CEO, Chairperson)"
+                      value={director.role}
+                      onChange={(e) => {
+                        const updated = [...directors];
+                        updated[index] = { ...updated[index], role: e.target.value };
+                        setDirectors(updated);
+                      }}
+                      className="flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setDirectors(prev => prev.filter((_, i) => i !== index))}
+                      className="mt-1 text-red-400 hover:text-red-600 flex-shrink-0"
+                      aria-label="Remove director"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

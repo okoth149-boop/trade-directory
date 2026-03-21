@@ -53,6 +53,7 @@ interface Business {
   companySize?: string;
   numberOfEmployees?: string;
   mobileNumber?: string;
+  managementTeam?: string;
   whatsappNumber?: string;
   website?: string;
   twitterUrl?: string;
@@ -355,6 +356,22 @@ export function BusinessVerificationTab() {
                       <InfoRow label="Company Size" value={business.companySize} />
                       <InfoRow label="Export License No." value={business.exportLicense} />
                       <InfoRow label="Licence Number" value={business.licenceNumber} />
+                      {business.managementTeam && (() => {
+                        try {
+                          const dirs = JSON.parse(business.managementTeam);
+                          if (Array.isArray(dirs) && dirs.length > 0) {
+                            return (
+                              <Box>
+                                <Typography variant="subtitle2" color="textSecondary">Directors</Typography>
+                                {dirs.map((d: { name: string; role: string }, i: number) => (
+                                  <Typography key={i} variant="body2">{d.name}{d.role ? ` — ${d.role}` : ''}</Typography>
+                                ))}
+                              </Box>
+                            );
+                          }
+                        } catch { return null; }
+                        return null;
+                      })()}
                     </Box>
                   </CardContent>
                 </Card>
