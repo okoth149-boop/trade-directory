@@ -234,11 +234,17 @@ export default function BusinessProfilePage() {
             industry: business?.industry || (user as any)?.industry || '',
             kraPin: business?.kraPin || '',
             registrationNumber: business?.registrationNumber || '',
+            legalStructure: business?.legalStructure || '',
+            serviceOffering: business?.serviceOffering || '',
             companyEmail: business?.companyEmail || user?.email || '',
             contactPhone: business?.contactPhone || user?.phoneNumber || '',
             town: business?.town || (user as any)?.businessLocation || '',
             county: business?.county || '',
             physicalAddress: business?.physicalAddress || '',
+            primaryContactFirstName: business?.primaryContactFirstName || '',
+            primaryContactLastName: business?.primaryContactLastName || '',
+            primaryContactEmail: business?.primaryContactEmail || '',
+            primaryContactPhone: business?.primaryContactPhone || '',
           }}
           isLoading={isSubmitting}
         />

@@ -110,11 +110,17 @@ interface BusinessProfileFormProps {
     industry?: string;
     kraPin?: string;
     registrationNumber?: string;
+    legalStructure?: string;
+    serviceOffering?: string;
     companyEmail?: string;
     contactPhone?: string;
     town?: string;
     county?: string;
     physicalAddress?: string;
+    primaryContactFirstName?: string;
+    primaryContactLastName?: string;
+    primaryContactEmail?: string;
+    primaryContactPhone?: string;
   };
   isLoading?: boolean;
 }
@@ -174,7 +180,8 @@ export function BusinessProfileForm({
       kenyanNationalId: '',
       name: registrationData?.name || '',
       logoUrl: '',
-      typeOfBusiness: '',
+      typeOfBusiness: registrationData?.legalStructure || '',
+      legalStructure: registrationData?.legalStructure || '',
       yearEstablished: '',
       numberOfEmployees: '',
       companySize: '',
@@ -184,6 +191,7 @@ export function BusinessProfileForm({
       exportLicense: '',
       sector: registrationData?.sector || '',
       industry: registrationData?.industry || '',
+      serviceOffering: registrationData?.serviceOffering || '',
       businessUserOrganisation: '',
       registrationCertificateUrl: '',
       pinCertificateUrl: '',
@@ -198,6 +206,10 @@ export function BusinessProfileForm({
       contactPhone: registrationData?.contactPhone || '',
       mobileNumber: '',
       companyEmail: registrationData?.companyEmail || '',
+      primaryContactFirstName: registrationData?.primaryContactFirstName || '',
+      primaryContactLastName: registrationData?.primaryContactLastName || '',
+      primaryContactEmail: registrationData?.primaryContactEmail || '',
+      primaryContactPhone: registrationData?.primaryContactPhone || '',
       whatsappNumber: '',
       twitterUrl: '',
       instagramUrl: '',
@@ -477,11 +489,13 @@ export function BusinessProfileForm({
   };
 
   // Helper: read-only field pre-filled from registration
-  const FromRegField = ({ value }: { value: string }) => (
-    <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-      <span className="flex-1">{value}</span>
-      <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">From registration</span>
+  const FromRegField = ({ value, label }: { value: string; label?: string }) => (
+    <div className="mt-1 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+      <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+      <span className="flex-1">{value || <span className="text-gray-400 italic">Not provided</span>}</span>
+      <span className="text-xs text-amber-600 dark:text-amber-400 whitespace-nowrap">From registration</span>
     </div>
   );
 
@@ -524,20 +538,7 @@ export function BusinessProfileForm({
 
               <div>
                 <Label htmlFor="name">Business Name *</Label>
-                {registrationData?.name && !initialData?.name ? (
-                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{form.watch('name')}</span>
-                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
-                  </div>
-                ) : (
-                  <Input
-                    id="name"
-                    {...form.register('name')}
-                    placeholder="Enter your business name"
-                    className="mt-1"
-                  />
-                )}
+                <FromRegField value={form.watch('name') || ''} />
                 {form.formState.errors.name && (
                   <p className="text-sm text-red-600 mt-1">
                     {form.formState.errors.name.message}
@@ -566,37 +567,18 @@ export function BusinessProfileForm({
       case 1: // Business Details
         return (
           <div className="space-y-6">
+            {/* Read-only notice */}
+            <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md text-sm text-amber-800 dark:text-amber-300">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>Fields marked "From registration" are managed in your Exporter Registration and cannot be edited here.</span>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="typeOfBusiness">Type of Business *</Label>
-                <SearchableSelect
-                  options={BUSINESS_TYPES}
-                  value={typeOfBusinessIsCustom ? 'Other' : typeOfBusinessVal}
-                  onChange={(selected) => {
-                    if (selected === 'Other') {
-                      setOtherBusinessTypeSelected(true);
-                      form.setValue('typeOfBusiness', '');
-                    } else {
-                      setOtherBusinessTypeSelected(false);
-                      form.setValue('typeOfBusiness', selected);
-                    }
-                  }}
-                  placeholder="Select business type"
-                />
-                {(otherBusinessTypeSelected || typeOfBusinessIsCustom) && (
-                  <Input
-                    className="mt-2"
-                    placeholder="Please specify your business type"
-                    value={typeOfBusinessIsCustom ? typeOfBusinessVal : ''}
-                    onChange={(e) => form.setValue('typeOfBusiness', e.target.value)}
-                    autoFocus={otherBusinessTypeSelected && !typeOfBusinessIsCustom}
-                  />
-                )}
-                {form.formState.errors.typeOfBusiness && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.typeOfBusiness.message}
-                  </p>
-                )}
+                <Label>Legal Structure</Label>
+                <FromRegField value={form.watch('legalStructure') || ''} />
               </div>
 
               <div>
@@ -649,151 +631,37 @@ export function BusinessProfileForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="kraPin">KRA PIN *</Label>
-                {registrationData?.kraPin && !initialData?.kraPin ? (
-                  <FromRegField value={form.watch('kraPin') || ''} />
-                ) : (
-                  <Input
-                    id="kraPin"
-                    {...form.register('kraPin')}
-                    placeholder="A000000000A"
-                    className="mt-1"
-                  />
-                )}
-                {form.formState.errors.kraPin && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.kraPin.message}
-                  </p>
-                )}
+                <Label>KRA PIN *</Label>
+                <FromRegField value={form.watch('kraPin') || ''} />
               </div>
 
               <div>
-                <Label htmlFor="registrationNumber">Registration Number</Label>
-                {registrationData?.registrationNumber && !initialData?.registrationNumber ? (
-                  <FromRegField value={form.watch('registrationNumber') || ''} />
-                ) : (
-                  <Input
-                    id="registrationNumber"
-                    {...form.register('registrationNumber')}
-                    placeholder="Enter registration number"
-                    className="mt-1"
-                  />
-                )}
+                <Label>Business Reg. No.</Label>
+                <FromRegField value={form.watch('registrationNumber') || ''} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="taxId">Tax ID</Label>
-                <Input
-                  id="taxId"
-                  {...form.register('taxId')}
-                  placeholder="Enter tax ID"
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="exportLicense">Export License</Label>
-                <Input
-                  id="exportLicense"
-                  {...form.register('exportLicense')}
-                  placeholder="Enter export license number"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="industry">Industry</Label>
-              {registrationData?.industry && !initialData?.industry ? (
+                <Label>Industry</Label>
                 <FromRegField value={form.watch('industry') || ''} />
-              ) : (
-                <>
-                  <SearchableSelect
-                    options={[...INDUSTRIES, 'Other']}
-                    value={form.watch('industry')?.startsWith('Other:') ? 'Other' : (form.watch('industry') || '')}
-                    onChange={(value) => {
-                      if (value === 'Other') {
-                        form.setValue('industry', 'Other');
-                        setIndustryOtherText('');
-                      } else {
-                        form.setValue('industry', value);
-                        setIndustryOtherText('');
-                      }
-                      form.setValue('sector', ''); // clear sector on industry change
-                      setSectorOtherText('');
-                    }}
-                    placeholder="Select industry (optional)"
-                  />
-                  {(form.watch('industry') === 'Other' || form.watch('industry')?.startsWith('Other:')) && (
-                    <Input
-                      placeholder="Please specify your industry"
-                      value={industryOtherText}
-                      onChange={(e) => {
-                        setIndustryOtherText(e.target.value);
-                        form.setValue('industry', e.target.value ? `Other: ${e.target.value}` : 'Other');
-                      }}
-                      className="mt-2"
-                    />
-                  )}
-                </>
-              )}
-            </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="sector">Business Sector *</Label>
-                {registrationData?.sector && !initialData?.sector ? (
-                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{form.watch('sector')}</span>
-                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
-                  </div>
-                ) : (
-                  (() => {
-                    const selectedIndustry = form.watch('industry');
-                    const baseIndustry = selectedIndustry?.startsWith('Other:') ? 'Other' : selectedIndustry;
-                    const sectorOptions = baseIndustry && SECTORS_BY_INDUSTRY[baseIndustry]
-                      ? [...SECTORS_BY_INDUSTRY[baseIndustry], 'Other']
-                      : [...Object.values(SECTORS_BY_INDUSTRY).flat(), 'Other'];
-                    const currentSector = form.watch('sector');
-                    return (
-                      <>
-                        <SearchableSelect
-                          options={sectorOptions}
-                          value={currentSector?.startsWith('Other:') ? 'Other' : (currentSector || '')}
-                          onChange={(value) => {
-                            if (value === 'Other') {
-                              form.setValue('sector', 'Other');
-                              setSectorOtherText('');
-                            } else {
-                              form.setValue('sector', value);
-                              setSectorOtherText('');
-                            }
-                          }}
-                          placeholder={selectedIndustry && baseIndustry !== 'Other' ? 'Select business sector' : 'Select industry first (or pick any sector)'}
-                        />
-                        {(currentSector === 'Other' || currentSector?.startsWith('Other:')) && (
-                          <Input
-                            placeholder="Please specify your sector"
-                            value={sectorOtherText}
-                            onChange={(e) => {
-                              setSectorOtherText(e.target.value);
-                              form.setValue('sector', e.target.value ? `Other: ${e.target.value}` : 'Other');
-                            }}
-                            className="mt-2"
-                          />
-                        )}
-                      </>
-                    );
-                  })()
-                )}
+                <Label>Business Sector *</Label>
+                <FromRegField value={form.watch('sector') || ''} />
                 {form.formState.errors.sector && (
                   <p className="text-sm text-red-600 mt-1">
                     {form.formState.errors.sector.message}
                   </p>
                 )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Products/Services</Label>
+                <FromRegField value={form.watch('serviceOffering') || ''} />
               </div>
 
               <div>
@@ -801,7 +669,7 @@ export function BusinessProfileForm({
                 <Input
                   id="businessUserOrganisation"
                   {...form.register('businessUserOrganisation')}
-                  placeholder="Enter business organisation (optional)"
+                  placeholder="e.g., KAM, KNCCI"
                   className="mt-1"
                 />
               </div>
@@ -809,21 +677,22 @@ export function BusinessProfileForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="productHsCode">Product HS Code</Label>
+                <Label htmlFor="exportLicense">Export License No.</Label>
                 <Input
-                  id="productHsCode"
-                  placeholder="e.g. 09 - Coffee, Tea & Spices"
-                  {...form.register('productHsCode')}
+                  id="exportLicense"
+                  {...form.register('exportLicense')}
+                  placeholder="Enter export license number"
+                  className="mt-1"
                 />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Harmonized System code for your main export product</p>
               </div>
 
               <div>
-                <Label htmlFor="serviceOffering">Service Offering</Label>
+                <Label htmlFor="productHsCode">Product HS Code</Label>
                 <Input
-                  id="serviceOffering"
-                  placeholder="e.g. Export Trading, Logistics"
-                  {...form.register('serviceOffering')}
+                  id="productHsCode"
+                  {...form.register('productHsCode')}
+                  placeholder="e.g., 0901.11"
+                  className="mt-1"
                 />
               </div>
             </div>
@@ -900,6 +769,13 @@ export function BusinessProfileForm({
       case 3: // Location & Contact
         return (
           <div className="space-y-6">
+            <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md text-sm text-amber-800 dark:text-amber-300">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>Location and contact fields are pre-filled from your registration and cannot be edited here.</span>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="licenceNumber">Export License No. *</Label>
@@ -930,91 +806,25 @@ export function BusinessProfileForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="town">City/Town *</Label>
-                {registrationData?.town && !initialData?.town ? (
-                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{form.watch('town')}</span>
-                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
-                  </div>
-                ) : (
-                  <Input
-                    id="town"
-                    {...form.register('town')}
-                    placeholder="Enter town"
-                    className="mt-1"
-                  />
-                )}
-                {form.formState.errors.town && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.town.message}
-                  </p>
-                )}
+                <Label>City/Town *</Label>
+                <FromRegField value={form.watch('town') || ''} />
               </div>
 
               <div>
-                <Label htmlFor="county">County *</Label>
-                {registrationData?.county && !initialData?.county ? (
-                  <FromRegField value={form.watch('county') || ''} />
-                ) : (
-                  <SearchableSelect
-                    options={KENYAN_COUNTIES}
-                    value={form.watch('county') || ''}
-                    onChange={(value) => form.setValue('county', value)}
-                    placeholder="Select county"
-                  />
-                )}
-                {form.formState.errors.county && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.county.message}
-                  </p>
-                )}
+                <Label>County *</Label>
+                <FromRegField value={form.watch('county') || ''} />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="physicalAddress">Physical Address *</Label>
-              {registrationData?.physicalAddress && !initialData?.physicalAddress ? (
-                <FromRegField value={form.watch('physicalAddress') || ''} />
-              ) : (
-                <Textarea
-                  id="physicalAddress"
-                  {...form.register('physicalAddress')}
-                  placeholder="Enter physical address"
-                  className="mt-1"
-                  rows={3}
-                />
-              )}
-              {form.formState.errors.physicalAddress && (
-                <p className="text-sm text-red-600 mt-1">
-                  {form.formState.errors.physicalAddress.message}
-                </p>
-              )}
+              <Label>Physical Address *</Label>
+              <FromRegField value={form.watch('physicalAddress') || ''} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="contactPhone">Company Phone Number *</Label>
-                {registrationData?.contactPhone && !initialData?.contactPhone ? (
-                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{form.watch('contactPhone')}</span>
-                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
-                  </div>
-                ) : (
-                  <Input
-                    id="contactPhone"
-                    {...form.register('contactPhone')}
-                    placeholder="+254 700 000 000"
-                    type="tel"
-                    className="mt-1"
-                  />
-                )}
-                {form.formState.errors.contactPhone && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.contactPhone.message}
-                  </p>
-                )}
+                <Label>Company Phone *</Label>
+                <FromRegField value={form.watch('contactPhone') || ''} />
               </div>
 
               <div>
@@ -1042,27 +852,31 @@ export function BusinessProfileForm({
               </div>
 
               <div>
-                <Label htmlFor="companyEmail">Company Email *</Label>
-                {registrationData?.companyEmail && !initialData?.companyEmail ? (
-                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{form.watch('companyEmail')}</span>
-                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
-                  </div>
-                ) : (
-                  <Input
-                    id="companyEmail"
-                    {...form.register('companyEmail')}
-                    placeholder="company@example.com"
-                    type="email"
-                    className="mt-1"
-                  />
-                )}
-                {form.formState.errors.companyEmail && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.companyEmail.message}
-                  </p>
-                )}
+                <Label>Company Email *</Label>
+                <FromRegField value={form.watch('companyEmail') || ''} />
+              </div>
+            </div>
+
+            {/* Primary Contact — read-only from registration */}
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Primary Contact (from registration)</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>First Name</Label>
+                  <FromRegField value={form.watch('primaryContactFirstName') || ''} />
+                </div>
+                <div>
+                  <Label>Last Name</Label>
+                  <FromRegField value={form.watch('primaryContactLastName') || ''} />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <FromRegField value={form.watch('primaryContactEmail') || ''} />
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <FromRegField value={form.watch('primaryContactPhone') || ''} />
+                </div>
               </div>
             </div>
           </div>
