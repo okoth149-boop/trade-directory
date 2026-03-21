@@ -174,6 +174,41 @@ export function withAdminAccess(
 }
 
 /**
+ * requireSuperAdmin — blocks Normal Admin, allows only isSuperAdmin users.
+ * Use for destructive or system-level operations.
+ */
+export function requireSuperAdmin(
+  handler: (req: NextRequest, context: { params: Promise<{ [key: string]: string }> }) => Promise<NextResponse>
+) {
+  return async function SuperAdminMiddleware(
+    req: NextRequest,
+    context: { params: Promise<{ [key: string]: string }> }
+  ): Promise<NextResponse> {
+    try {
+      const tokenPayload = await verifyToken(req);
+      if (!tokenPayload) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      if (!tokenPayload.isSuperAdmin) {
+        return NextResponse.json(
+          { error: 'Forbidden — Super Admin only' },
+          { status: 403 }
+        );
+      }
+      req.user = {
+        userId: tokenPayload.userId,
+        email: tokenPayload.email,
+        role: tokenPayload.role as UserRole,
+      };
+      return await handler(req, context);
+    } catch (error) {
+      console.error('SuperAdmin Middleware Error:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  };
+}
+
+/**
  * Middleware to check if user can access directory
  */
 export function withDirectoryAccess(

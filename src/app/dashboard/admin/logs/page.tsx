@@ -47,7 +47,8 @@ export default function SystemLogsPage() {
   const router = useRouter();
   const isSuperAdmin = (user as any)?.isSuperAdmin === true;
 
-  const [tab, setTab] = useState(0);
+  // Normal Admin starts on activity tab; Super Admin starts on audit tab
+  const [tab, setTab] = useState(isSuperAdmin ? 0 : 1);
   const [rows, setRows] = useState<(ActivityLog | AuditLog)[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -62,8 +63,9 @@ export default function SystemLogsPage() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    if (!isSuperAdmin) router.replace('/dashboard/admin');
-  }, [isSuperAdmin, router]);
+    // Normal Admin: redirect away from audit tab if they somehow land on it
+    if (!isSuperAdmin && tab === 0) setTab(1);
+  }, [isSuperAdmin, tab]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 300);
@@ -251,7 +253,7 @@ export default function SystemLogsPage() {
     },
   ];
 
-  if (!isSuperAdmin) return null;
+  if (!isSuperAdmin && tab === 0) return null; // guard while tab state syncs
 
   const uniqueUsers = [...new Set(rows.map((l: any) => (l.user?.id || l.adminUser?.id)).filter(Boolean))].length;
 
@@ -261,15 +263,23 @@ export default function SystemLogsPage() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <FileText size={24} />
           <Box>
-            <Typography variant="h5" fontWeight={700}>System Audit Logs</Typography>
-            <Typography variant="body2" color="text.secondary">Track all admin actions and system activities</Typography>
+            <Typography variant="h5" fontWeight={700}>
+              {isSuperAdmin ? 'System Audit Logs' : 'My Activity Logs'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {isSuperAdmin
+                ? 'Track all admin actions and system activities'
+                : 'View your own actions and activity history'}
+            </Typography>
           </Box>
         </Box>
-        {/* Export buttons */}
-        <ButtonGroup size="small" variant="outlined" disabled={exporting}>
-          <Button startIcon={<Download />} onClick={() => handleExport('csv')}>CSV</Button>
-          <Button onClick={() => handleExport('json')}>JSON</Button>
-        </ButtonGroup>
+        {/* Export buttons — Super Admin only */}
+        {isSuperAdmin && (
+          <ButtonGroup size="small" variant="outlined" disabled={exporting}>
+            <Button startIcon={<Download />} onClick={() => handleExport('csv')}>CSV</Button>
+            <Button onClick={() => handleExport('json')}>JSON</Button>
+          </ButtonGroup>
+        )}
       </Box>
 
       {/* Stats */}
@@ -291,8 +301,10 @@ export default function SystemLogsPage() {
 
       <MainCard>
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Tab icon={<Shield size={16} />} iconPosition="start" label="Admin Audit Logs" />
-          <Tab icon={<Activity size={16} />} iconPosition="start" label="User Activity Logs" />
+          {isSuperAdmin && (
+            <Tab icon={<Shield size={16} />} iconPosition="start" label="Admin Audit Logs" />
+          )}
+          <Tab icon={<Activity size={16} />} iconPosition="start" label={isSuperAdmin ? 'User Activity Logs' : 'My Activity'} />
         </Tabs>
 
         {/* Toolbar */}

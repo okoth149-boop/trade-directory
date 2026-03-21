@@ -206,41 +206,27 @@ export const PERMISSION_GROUPS = {
 
 // Role-based permission mappings
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  // Administrator - Full access
+  // Normal Administrator — operational access only, no destructive or system-level actions
   ADMIN: [
-    // User management
+    // User management (no delete, no role changes)
     'USER_VIEW',
     'USER_CREATE',
     'USER_EDIT',
-    'USER_DELETE',
-    'USER_MANAGE_ROLES',
     'USER_SUSPEND',
-    // Business
+    // Business (no delete, no feature)
     'BUSINESS_VIEW',
-    'BUSINESS_CREATE',
     'BUSINESS_EDIT',
-    'BUSINESS_DELETE',
     'BUSINESS_VERIFY',
-    'BUSINESS_FEATURE',
-    // Products
+    // Products (no delete)
     'PRODUCT_VIEW',
-    'PRODUCT_CREATE',
     'PRODUCT_EDIT',
-    'PRODUCT_DELETE',
     'PRODUCT_VERIFY',
-    // Analytics
+    // Analytics (view only, no export)
     'ANALYTICS_VIEW',
-    'ANALYTICS_EXPORT',
-    // Categories
+    // Categories (view only)
     'CATEGORY_VIEW',
-    'CATEGORY_CREATE',
-    'CATEGORY_EDIT',
-    'CATEGORY_DELETE',
-    // Certifications
+    // Certifications (view only)
     'CERTIFICATION_VIEW',
-    'CERTIFICATION_CREATE',
-    'CERTIFICATION_EDIT',
-    'CERTIFICATION_DELETE',
     // Directory
     'DIRECTORY:READ',
     'DIRECTORY:SEARCH',
@@ -249,15 +235,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'INQUIRY:READ_OWN',
     'INQUIRY:UPDATE_OWN',
     'INQUIRY:DELETE_OWN',
-    // Admin
+    // Admin (no settings, no permissions, no full audit)
     'ADMIN:ACCESS',
     'ADMIN:USERS_MANAGE',
-    'ADMIN:ROLES_MANAGE',
-    'ADMIN:PERMISSIONS_MANAGE',
-    'ADMIN:SETTINGS_MANAGE',
     'ADMIN:REPORTS_VIEW',
-    'ADMIN:EXPORT_DATA',
-    'ADMIN:AUDIT_VIEW',
     'ADMIN:ANALYTICS_VIEW',
   ],
 

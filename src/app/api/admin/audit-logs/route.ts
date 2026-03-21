@@ -21,21 +21,11 @@ export async function OPTIONS() {
 export async function GET(request: NextRequest) {
   try {
     const token = await verifyToken(request);
-    if (!token || token.role !== 'ADMIN') {
+    if (!token || (token.role !== 'ADMIN' && token.role !== 'SUPER_ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
     }
 
-    // isSuperAdmin is set by verifyToken when role === SUPER_ADMIN
-    if (!token.isSuperAdmin) {
-      // Also allow regular admins to view activity logs (not audit logs)
-      const adminUser = await prisma.user.findUnique({
-        where: { id: token.userId },
-        select: { isSuperAdmin: true },
-      });
-      if (!adminUser?.isSuperAdmin) {
-        return NextResponse.json({ error: 'Forbidden — Super Admin only' }, { status: 403, headers: corsHeaders });
-      }
-    }
+    const isSuperAdmin = token.isSuperAdmin === true;
 
     const sp = request.nextUrl.searchParams;
     const page     = Math.max(1, parseInt(sp.get('page')  || '1'));
@@ -48,10 +38,19 @@ export async function GET(request: NextRequest) {
     const startDate = sp.get('startDate') || '';
     const endDate   = sp.get('endDate')   || '';
 
+    // Normal Admin: audit logs are Super Admin only; activity logs scoped to own actions
+    if (!isSuperAdmin && type === 'audit') {
+      return NextResponse.json({ error: 'Forbidden — Super Admin only' }, { status: 403, headers: corsHeaders });
+    }
     // ── Activity logs ──────────────────────────────────────────────────────
     if (type === 'activity') {
       const where: Record<string, unknown> = {};
-      if (userId) where.userId = userId;
+      // Normal Admin can only see their own activity
+      if (!isSuperAdmin) {
+        where.userId = token.userId;
+      } else if (userId) {
+        where.userId = userId;
+      }
       if (action) where.action = { contains: action, mode: 'insensitive' };
       if (search) {
         where.OR = [
