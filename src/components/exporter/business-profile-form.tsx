@@ -315,7 +315,7 @@ export function BusinessProfileForm({
     {
       title: 'Business Details',
       icon: FileText,
-      fields: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector']
+      fields: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector', 'licenceNumber']
     },
     {
       title: 'Documents',
@@ -325,7 +325,7 @@ export function BusinessProfileForm({
     {
       title: 'Location & Contact',
       icon: MapPin,
-      fields: ['licenceNumber', 'town', 'county', 'physicalAddress', 'website', 'contactPhone', 'companyEmail', 'whatsappNumber']
+      fields: ['town', 'county', 'physicalAddress', 'website', 'contactPhone', 'companyEmail', 'whatsappNumber']
     },
     {
       title: 'Social Media & Location',
@@ -365,9 +365,9 @@ export function BusinessProfileForm({
   // Define required fields for each section
   const sectionRequiredFields: Record<number, string[]> = {
     0: ['kenyanNationalId', 'name', 'logoUrl'], // Basic Details
-    1: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector'], // Business Details
+    1: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector', 'licenceNumber'], // Business Details
     2: ['registrationCertificateUrl', 'pinCertificateUrl'], // Documents (exportLicenseUrl is optional)
-    3: ['licenceNumber', 'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'], // Location & Contact
+    3: ['town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'], // Location & Contact
     4: ['coordinates'], // Social Media & Location (coordinates is now required)
     5: [], // Company Capacity & Story (all optional)
   };
@@ -680,6 +680,21 @@ export function BusinessProfileForm({
               </div>
 
               <div>
+                <Label htmlFor="licenceNumber">Licence Number *</Label>
+                <Input
+                  id="licenceNumber"
+                  {...form.register('licenceNumber')}
+                  placeholder="Enter licence number"
+                  className="mt-1"
+                />
+                {form.formState.errors.licenceNumber && (
+                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.licenceNumber.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="productHsCode">Product HS Code</Label>
                 <Input
                   id="productHsCode"
@@ -822,27 +837,23 @@ export function BusinessProfileForm({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="licenceNumber">Export License No. *</Label>
-                <Input
-                  id="licenceNumber"
-                  {...form.register('licenceNumber')}
-                  placeholder="Enter export license number"
-                  className="mt-1"
-                />
-                {form.formState.errors.licenceNumber && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.licenceNumber.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
                 <Label htmlFor="website">Website Link</Label>
                 <Input
                   id="website"
                   {...form.register('website')}
                   placeholder="https://example.com"
                   type="url"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="mobileNumber">Mobile Number</Label>
+                <Input
+                  id="mobileNumber"
+                  {...form.register('mobileNumber')}
+                  placeholder="+254 700 000 000"
+                  type="tel"
                   className="mt-1"
                 />
               </div>
@@ -872,19 +883,6 @@ export function BusinessProfileForm({
               </div>
 
               <div>
-                <Label htmlFor="mobileNumber">Mobile Number</Label>
-                <Input
-                  id="mobileNumber"
-                  {...form.register('mobileNumber')}
-                  placeholder="+254 700 000 000"
-                  type="tel"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
                 <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
                 <Input
                   id="whatsappNumber"
@@ -894,11 +892,11 @@ export function BusinessProfileForm({
                   className="mt-1"
                 />
               </div>
+            </div>
 
-              <div>
-                <Label>Company Email *</Label>
-                <FromRegField value={form.watch('companyEmail') || ''} />
-              </div>
+            <div>
+              <Label>Company Email *</Label>
+              <FromRegField value={form.watch('companyEmail') || ''} />
             </div>
 
             <div className="border-t pt-4">
