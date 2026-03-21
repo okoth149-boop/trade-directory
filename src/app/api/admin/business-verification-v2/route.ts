@@ -1,11 +1,123 @@
 /**
  * Business Verification API v2 - Production Ready
  * Correctly mapped to Prisma Business schema
+ * Includes enhanced verification decision logic with field validation
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { sendBusinessVerificationApprovedEmail, sendBusinessVerificationRejectedEmail, sendBusinessSuspendedEmail } from '@/lib/email-templates';
+
+// Verification validation criteria
+const VERIFICATION_CRITERIA = {
+  requiredDocuments: [
+    'registrationCertificateUrl',
+    'pinCertificateUrl',
+  ],
+  requiredFields: [
+    'name',
+    'registrationNumber',
+    'kraPin',
+    'contactEmail',
+    'sector',
+    'physicalAddress',
+    'county',
+    'town',
+  ],
+  optionalDocuments: [
+    'kenyanNationalIdUrl',
+    'incorporationCertificateUrl',
+    'exportLicenseUrl',
+  ],
+};
+
+/**
+ * Validate business verification criteria
+ * Returns validation result with missing items
+ */
+async function validateBusinessForVerification(businessId: string): Promise<{
+  isValid: boolean;
+  missingRequiredFields: string[];
+  missingDocuments: string[];
+  warnings: string[];
+}> {
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: {
+      name: true,
+      registrationNumber: true,
+      kraPin: true,
+      contactEmail: true,
+      sector: true,
+      physicalAddress: true,
+      county: true,
+      town: true,
+      companyEmail: true,
+      contactPhone: true,
+      registrationCertificateUrl: true,
+      pinCertificateUrl: true,
+      kenyanNationalIdUrl: true,
+      incorporationCertificateUrl: true,
+      exportLicenseUrl: true,
+      industry: true,
+      legalStructure: true,
+    },
+  });
+
+  if (!business) {
+    return {
+      isValid: false,
+      missingRequiredFields: [],
+      missingDocuments: [],
+      warnings: ['Business not found'],
+    };
+  }
+
+  const missingRequiredFields: string[] = [];
+  const missingDocuments: string[] = [];
+  const warnings: string[] = [];
+
+  // Check required fields
+  for (const field of VERIFICATION_CRITERIA.requiredFields) {
+    const value = business[field as keyof typeof business];
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
+      missingRequiredFields.push(field);
+    }
+  }
+
+  // Check required documents
+  for (const doc of VERIFICATION_CRITERIA.requiredDocuments) {
+    const value = business[doc as keyof typeof business];
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
+      missingDocuments.push(doc);
+    }
+  }
+
+  // Add warnings for optional but recommended items
+  for (const doc of VERIFICATION_CRITERIA.optionalDocuments) {
+    const value = business[doc as keyof typeof business];
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
+      warnings.push(`Missing optional document: ${doc.replace('Url', '')}`);
+    }
+  }
+
+  // Validate KRA PIN format (Kenyan KRA PIN format: A0000000000)
+  if (business.kraPin && !/^A\d{9,11}$/.test(business.kraPin)) {
+    warnings.push('KRA PIN format may be invalid');
+  }
+
+  // Validate registration number format
+  if (business.registrationNumber && business.registrationNumber.length < 5) {
+    warnings.push('Registration number appears too short');
+  }
+
+  return {
+    isValid: missingRequiredFields.length === 0 && missingDocuments.length === 0,
+    missingRequiredFields,
+    missingDocuments,
+    warnings,
+  };
+}
 
 // GET: Fetch businesses for verification with correct schema mapping
 export async function GET(request: NextRequest) {
@@ -205,11 +317,23 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (!['approve', 'reject', 'togglePublish'].includes(action)) {
+    if (!['approve', 'reject', 'togglePublish', 'validate'].includes(action)) {
       return NextResponse.json(
-        { error: 'Action must be "approve", "reject", or "togglePublish"' },
+        { error: 'Action must be "approve", "reject", "togglePublish", or "validate"' },
         { status: 400 }
       );
+    }
+
+    // Handle validate action - check if business meets verification criteria
+    if (action === 'validate') {
+      const validation = await validateBusinessForVerification(id);
+      return NextResponse.json({
+        success: true,
+        validation,
+        message: validation.isValid
+          ? 'Business meets all verification criteria'
+          : 'Business does not meet verification criteria',
+      });
     }
 
     // Handle togglePublish action
@@ -258,8 +382,35 @@ export async function PATCH(request: NextRequest) {
       updatedAt: new Date(),
     };
 
-    // Add verification notes if provided
-    if (notes) {
+    // Validate before approval
+    if (action === 'approve') {
+      const validation = await validateBusinessForVerification(id);
+      
+      // Include validation results in response for admin awareness
+      body.validation = validation;
+      
+      // If business doesn't meet criteria, add warning to notes but still allow approval
+      // (admins may override in special cases)
+      if (!validation.isValid) {
+        const missingItems = [
+          ...validation.missingRequiredFields.map(f => `Missing field: ${f}`),
+          ...validation.missingDocuments.map(d => `Missing document: ${d.replace('Url', '')}`),
+        ].join('; ');
+        
+        // Add validation warning to verification notes
+        updateData.verificationNotes = notes
+          ? `${notes}\n\n[Auto-validated] Issues found: ${missingItems}`
+          : `[Auto-validated] Issues found: ${missingItems}`;
+      } else if (validation.warnings.length > 0) {
+        // Add warnings even if validation passed
+        updateData.verificationNotes = notes
+          ? `${notes}\n\n[Validation Warnings] ${validation.warnings.join('; ')}`
+          : `[Validation Warnings] ${validation.warnings.join('; ')}`;
+      } else if (notes) {
+        updateData.verificationNotes = notes;
+      }
+    } else if (notes) {
+      // For rejection, add notes if provided
       updateData.verificationNotes = notes;
     }
 
@@ -318,11 +469,20 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    // Include validation results in response if approval action
+    const response: any = {
       success: true,
       message: `Business ${action === 'approve' ? 'verified' : 'rejected'} successfully`,
       business: updatedBusiness,
-    });
+    };
+
+    // Add validation info to response for admin awareness
+    if (action === 'approve' && body.validation) {
+      response.validation = body.validation;
+      response.validationPerformed = true;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
 
     return NextResponse.json(
