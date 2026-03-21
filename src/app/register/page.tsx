@@ -235,7 +235,6 @@ function RegisterPageContent({
       businessName: "",
       dateOfIncorporation: "",
       businessRegistrationNumber: "",
-      kraPin: "",
       sector: "",
       industry: "",
       productServices: [],
@@ -390,7 +389,6 @@ function RegisterPageContent({
           businessLocation: values.city || values.fullAddress,
           dateOfIncorporation: values.dateOfIncorporation,
           businessRegistrationNumber: values.businessRegistrationNumber,
-          kraPin: values.kraPin,
           sector: values.sector,
           industry: values.industry,
           productServices: values.productServices,
@@ -722,24 +720,6 @@ function RegisterPageContent({
                                     Verify
                                   </button>
                                 </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} 
-                        />
-
-                        <FormField 
-                          control={form.control} 
-                          name="kraPin" 
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-gray-900 font-medium">KRA PIN</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="e.g., A012345678Z" 
-                                  {...field} 
-                                  className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

@@ -232,7 +232,6 @@ export default function BusinessProfilePage() {
             name: business?.name || user?.company || '',
             sector: business?.sector || (user as any)?.productCategory || '',
             industry: business?.industry || (user as any)?.industry || '',
-            kraPin: business?.kraPin || '',
             registrationNumber: business?.registrationNumber || '',
             legalStructure: business?.legalStructure || '',
             serviceOffering: business?.serviceOffering || '',

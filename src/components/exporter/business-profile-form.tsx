@@ -108,7 +108,6 @@ interface BusinessProfileFormProps {
     name?: string;
     sector?: string;
     industry?: string;
-    kraPin?: string;
     registrationNumber?: string;
     legalStructure?: string;
     serviceOffering?: string;
@@ -186,7 +185,7 @@ export function BusinessProfileForm({
       yearEstablished: '',
       numberOfEmployees: '',
       companySize: '',
-      kraPin: registrationData?.kraPin || '',
+      kraPin: '',
       registrationNumber: registrationData?.registrationNumber || '',
       taxId: '',
       exportLicense: '',
@@ -619,8 +618,16 @@ export function BusinessProfileForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>KRA PIN *</Label>
-                <FromRegField value={form.watch('kraPin') || ''} />
+                <Label htmlFor="kraPin">KRA PIN *</Label>
+                <Input
+                  id="kraPin"
+                  {...form.register('kraPin')}
+                  placeholder="e.g., A012345678Z"
+                  className="mt-1"
+                />
+                {form.formState.errors.kraPin && (
+                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.kraPin.message}</p>
+                )}
               </div>
 
               <div>

@@ -258,7 +258,6 @@ export async function POST(request: NextRequest) {
 const REGISTRATION_OWNED_FIELDS = [
   'name',
   'registrationNumber',
-  'kraPin',
   'dateOfIncorporation',
   'yearEstablished',
   'legalStructure',
