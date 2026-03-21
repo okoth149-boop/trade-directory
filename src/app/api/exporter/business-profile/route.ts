@@ -119,9 +119,9 @@ export async function POST(request: NextRequest) {
 
     // Calculate profile completion
     const requiredFields = [
-      'kenyanNationalId', 'name', 'logoUrl',
+      'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness', 'yearEstablished',
       'numberOfEmployees', 'kraPin', 'sector', 'businessUserOrganisation',
-      'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicense',
+      'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
       'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'
     ];
 
@@ -138,10 +138,13 @@ export async function POST(request: NextRequest) {
         // Business Details
         businessPurpose: businessData.businessPurpose,
         dateOfIncorporation: businessData.dateOfIncorporation,
+        typeOfBusiness: businessData.typeOfBusiness,
         legalStructure: businessData.legalStructure,
+        yearEstablished: businessData.yearEstablished,
         numberOfEmployees: businessData.numberOfEmployees,
         companySize: businessData.companySize,
         registrationNumber: businessData.registrationNumber,
+        taxId: businessData.taxId,
         exportLicense: businessData.exportLicense,
         kraPin: businessData.kraPin,
         sector: businessData.sector,
@@ -161,7 +164,7 @@ export async function POST(request: NextRequest) {
         documentsUploadedAt: new Date(),
         
         // Location & Contact
-        licenceNumber: businessData.exportLicense || businessData.licenceNumber,
+        licenceNumber: businessData.licenceNumber,
         town: businessData.town,
         county: businessData.county,
         location: `${businessData.town}, ${businessData.county}`,
@@ -251,27 +254,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-// Fields owned by the Exporter Registration flow — never updatable via business-profile API
-const REGISTRATION_OWNED_FIELDS = [
-  'name',
-  'registrationNumber',
-  'dateOfIncorporation',
-  'yearEstablished',
-  'legalStructure',
-  'industry',
-  'sector',
-  'serviceOffering',
-  'physicalAddress',
-  'county',
-  'town',
-  'companyEmail',
-  'contactPhone',
-  'primaryContactFirstName',
-  'primaryContactLastName',
-  'primaryContactEmail',
-  'primaryContactPhone',
-] as const;
-
 export async function PUT(request: NextRequest) {
   try {
     const tokenPayload = await verifyToken(request);
@@ -299,24 +281,18 @@ export async function PUT(request: NextRequest) {
     // Extract certifications if provided
     const { certifications, ...businessData } = data;
 
-    // Strip any registration-owned fields from the update payload — they cannot be changed here
-    for (const field of REGISTRATION_OWNED_FIELDS) {
-      delete businessData[field];
-    }
-
     // Debug logging for the three fields of interest
 
-    // Canonical required fields — must match dashboard and form
-    const editableRequiredFields = [
-      'kenyanNationalId', 'logoUrl',
-      'numberOfEmployees', 'kraPin',
-      'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicense',
-      'coordinates',
+    // Calculate profile completion
+    const requiredFields = [
+      'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness', 'yearEstablished',
+      'numberOfEmployees', 'kraPin', 'sector', 'businessUserOrganisation',
+      'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
+      'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'
     ];
-    const regOwnedRequired = ['name', 'sector', 'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'];
-    const editableComplete = editableRequiredFields.filter(f => businessData[f] ?? existingBusiness[f as keyof typeof existingBusiness]).length;
-    const regOwnedComplete = regOwnedRequired.filter(f => existingBusiness[f as keyof typeof existingBusiness]).length;
-    const profileComplete = (editableComplete + regOwnedComplete) === (editableRequiredFields.length + regOwnedRequired.length);
+
+    const completedFields = requiredFields.filter(field => businessData[field]).length;
+    const profileComplete = completedFields === requiredFields.length;
 
     // If business was APPROVED/VERIFIED, any edit sends it back for re-verification
     const wasVerified = ['APPROVED', 'VERIFIED'].includes(existingBusiness.verificationStatus || '');
@@ -348,21 +324,32 @@ export async function PUT(request: NextRequest) {
     const business = await prisma.business.update({
       where: { ownerId: tokenPayload.userId },
       data: {
-        // Basic Details (editable)
+        // Basic Details
         kenyanNationalId: businessData.kenyanNationalId,
+        name: businessData.name,
         logoUrl: businessData.logoUrl,
         
-        // Business Details (editable only)
+        // Business Details
+        businessPurpose: businessData.businessPurpose,
+        dateOfIncorporation: businessData.dateOfIncorporation,
+        typeOfBusiness: businessData.typeOfBusiness,
+        legalStructure: businessData.legalStructure,
         yearEstablished: businessData.yearEstablished,
         numberOfEmployees: businessData.numberOfEmployees,
         companySize: businessData.companySize,
+        registrationNumber: businessData.registrationNumber,
+        taxId: businessData.taxId,
         exportLicense: businessData.exportLicense,
+        kraPin: businessData.kraPin,
+        sector: businessData.sector,
+        industry: businessData.industry,
         businessUserOrganisation: businessData.businessUserOrganisation,
-        productHsCode: businessData.productHsCode,
         shareholders: businessData.shareholders,
         managementTeam: businessData.managementTeam,
+        primaryContactFirstName: businessData.primaryContactFirstName,
+        primaryContactLastName: businessData.primaryContactLastName,
         
-        // Documents (editable)
+        // Documents
         registrationCertificateUrl: businessData.registrationCertificateUrl,
         pinCertificateUrl: businessData.pinCertificateUrl,
         kenyanNationalIdUrl: businessData.kenyanNationalIdUrl,
@@ -370,27 +357,34 @@ export async function PUT(request: NextRequest) {
         exportLicenseUrl: businessData.exportLicenseUrl,
         documentsUploadedAt: wasVerified ? new Date() : existingBusiness.documentsUploadedAt,
         
-        // Location & Contact (editable only)
-        licenceNumber: businessData.exportLicense || businessData.licenceNumber,
+        // Location & Contact
+        licenceNumber: businessData.licenceNumber,
+        town: businessData.town,
+        county: businessData.county,
+        location: `${businessData.town}, ${businessData.county}`,
+        physicalAddress: businessData.physicalAddress,
         website: businessData.website,
+        contactEmail: businessData.companyEmail,
+        contactPhone: businessData.contactPhone,
         mobileNumber: businessData.mobileNumber,
+        companyEmail: businessData.companyEmail,
         whatsappNumber: businessData.whatsappNumber,
         
-        // Social Media (editable)
+        // Social Media
         twitterUrl: businessData.twitterUrl,
         instagramUrl: businessData.instagramUrl,
         
-        // Location GPS (editable)
+        // Location GPS
         coordinates: businessData.coordinates,
         
-        // Company Capacity (editable)
+        // Company Capacity
         exportVolumePast3Years: businessData.exportVolumePast3Years,
         currentExportMarkets: Array.isArray(businessData.currentExportMarkets) 
           ? businessData.currentExportMarkets.join(', ')
           : businessData.currentExportMarkets,
         productionCapacityPast3: businessData.productionCapacityPast3,
         
-        // Company Story (editable)
+        // Company Story
         companyStory: businessData.companyStory,
         
         // System fields

@@ -43,6 +43,7 @@ export const RegisterSchema = z.object({
   businessName: z.string().optional(),
   dateOfIncorporation: z.string().optional(),
   businessRegistrationNumber: z.string().optional(),
+  kraPin: z.string().optional(),
   sector: z.string().optional(),
   industry: z.string().optional(),
   productServices: z.array(z.string()).optional(),

@@ -19,9 +19,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { AuditLogger } from '@/lib/admin/audit';
 import bcrypt from 'bcryptjs';
-import { requirePermission, requireSuperAdmin } from '@/lib/rbac/middleware';
+import { requirePermission } from '@/lib/rbac/middleware';
 import { Permission } from '@/lib/rbac/permissions';
-import { verifyToken } from '@/lib/auth-utils';
 
 // GET: List users with pagination, sorting, filtering
 export const GET = requirePermission(
@@ -142,16 +141,6 @@ export const POST = requirePermission(
         );
       }
 
-      // Normal Admin cannot create Super Admin or Admin accounts
-      const token = await verifyToken(request);
-      const isSuperAdmin = token?.isSuperAdmin === true;
-      if (!isSuperAdmin && (role === 'SUPER_ADMIN' || role === 'ADMIN')) {
-        return NextResponse.json(
-          { error: 'Forbidden — cannot assign admin roles' },
-          { status: 403 }
-        );
-      }
-
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
         where: { email },
@@ -237,23 +226,6 @@ export const PUT = requirePermission(
         );
       }
 
-      // Normal Admin cannot change roles or isSuperAdmin flag
-      const token = await verifyToken(request);
-      const isSuperAdmin = token?.isSuperAdmin === true;
-      if (!isSuperAdmin) {
-        delete updates.role;
-        delete updates.isSuperAdmin;
-      }
-
-      // Normal Admin cannot edit Super Admin accounts
-      const targetUser = await prisma.user.findUnique({ where: { id }, select: { isSuperAdmin: true } });
-      if (!isSuperAdmin && targetUser?.isSuperAdmin) {
-        return NextResponse.json(
-          { error: 'Forbidden — cannot modify Super Admin accounts' },
-          { status: 403 }
-        );
-      }
-
       // Get current user data for audit
       const currentUser = await prisma.user.findUnique({
         where: { id },
@@ -317,9 +289,10 @@ export const PUT = requirePermission(
   }
 );
 
-// DELETE: Delete user — Super Admin only
-export const DELETE = requireSuperAdmin(
-  async (request, _context) => {
+// DELETE: Delete user
+export const DELETE = requirePermission(
+  Permission.USER_DELETE,
+  async (request, user) => {
     try {
       const { searchParams } = new URL(request.url);
       const id = searchParams.get('id');
@@ -343,14 +316,6 @@ export const DELETE = requireSuperAdmin(
         );
       }
 
-      // Cannot delete another Super Admin
-      if (userToDelete.isSuperAdmin) {
-        return NextResponse.json(
-          { error: 'Forbidden — cannot delete Super Admin accounts' },
-          { status: 403 }
-        );
-      }
-
       // Delete user
       await prisma.user.delete({
         where: { id },
@@ -361,7 +326,7 @@ export const DELETE = requireSuperAdmin(
         'User',
         id,
         userToDelete,
-        request.user!.userId,
+        user.id,
         request.headers.get('x-forwarded-for') || undefined,
         request.headers.get('user-agent') || undefined
       );

@@ -142,17 +142,19 @@ export interface Business {
   physicalAddress?: string;
   
   // Business Details
-  typeOfBusiness?: string;      // kept for legacy data display only
-  businessUserOrganisation?: string;
+  typeOfBusiness?: string;      // Limited Company, Sole Proprietorship, etc.
+  businessUserOrganisation?: string; // Business organization type
   companySize?: string;
-  numberOfEmployees?: string;
+  numberOfEmployees?: string;   // Employee count range
+  yearEstablished?: string;
   
   // Registration & Compliance
   kenyanNationalId?: string;
   nationalId?: string;
   registrationNumber?: string;
   licenceNumber?: string;
-  kraPin?: string;
+  kraPin?: string;              // KRA PIN number
+  taxId?: string;
   exportLicense?: string;
   registrationCertificateUrl?: string;
   pinCertificateUrl?: string;

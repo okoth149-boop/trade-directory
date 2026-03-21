@@ -53,11 +53,12 @@ const businessFormSchema = z.object({
   
   // Business Details
   typeOfBusiness: z.string().min(1, 'Type of business is required'),
-  yearEstablished: z.string().optional(),
+  yearEstablished: z.string().min(4, 'Year established is required'),
   numberOfEmployees: z.string().min(1, 'Number of employees is required'),
   companySize: z.string().optional(),
   kraPin: z.string().min(1, 'KRA PIN is required'),
   registrationNumber: z.string().optional(),
+  taxId: z.string().optional(),
   exportLicense: z.string().optional(),
   sector: z.string().min(1, 'Business sector is required'),
   industry: z.string().optional(),
@@ -73,7 +74,7 @@ const businessFormSchema = z.object({
   exportLicenseUrl: z.string().optional(),
   
   // Location & Contact
-  licenceNumber: z.string().optional(),
+  licenceNumber: z.string().min(1, 'Licence number is required'),
   town: z.string().min(1, 'Town is required'),
   county: z.string().min(1, 'County is required'),
   physicalAddress: z.string().min(1, 'Physical address is required'),
@@ -107,19 +108,13 @@ interface BusinessProfileFormProps {
     name?: string;
     sector?: string;
     industry?: string;
+    kraPin?: string;
     registrationNumber?: string;
-    legalStructure?: string;
-    serviceOffering?: string;
     companyEmail?: string;
     contactPhone?: string;
     town?: string;
     county?: string;
     physicalAddress?: string;
-    primaryContactFirstName?: string;
-    primaryContactLastName?: string;
-    primaryContactEmail?: string;
-    primaryContactPhone?: string;
-    dateOfIncorporation?: string;
   };
   isLoading?: boolean;
 }
@@ -148,9 +143,6 @@ export function BusinessProfileForm({
     logoUrl: '',
   });
 
-  // Directors state
-  const [directors, setDirectors] = useState<{ name: string; role: string }[]>([]);
-
   // Load initial certifications if editing existing business
   useEffect(() => {
     if (initialData && (initialData as any).certifications) {
@@ -174,13 +166,6 @@ export function BusinessProfileForm({
     if (initialData?.sector?.startsWith('Other:')) {
       setSectorOtherText(initialData.sector.replace('Other: ', ''));
     }
-    // Parse directors from managementTeam JSON
-    if ((initialData as any)?.managementTeam) {
-      try {
-        const parsed = JSON.parse((initialData as any).managementTeam);
-        if (Array.isArray(parsed)) setDirectors(parsed);
-      } catch { /* ignore malformed */ }
-    }
   }, []);
 
   const form = useForm<BusinessFormData>({
@@ -189,17 +174,16 @@ export function BusinessProfileForm({
       kenyanNationalId: '',
       name: registrationData?.name || '',
       logoUrl: '',
-      typeOfBusiness: registrationData?.legalStructure || '',
-      legalStructure: registrationData?.legalStructure || '',
+      typeOfBusiness: '',
       yearEstablished: '',
       numberOfEmployees: '',
       companySize: '',
-      kraPin: '',
+      kraPin: registrationData?.kraPin || '',
       registrationNumber: registrationData?.registrationNumber || '',
+      taxId: '',
       exportLicense: '',
       sector: registrationData?.sector || '',
       industry: registrationData?.industry || '',
-      serviceOffering: registrationData?.serviceOffering || '',
       businessUserOrganisation: '',
       registrationCertificateUrl: '',
       pinCertificateUrl: '',
@@ -214,10 +198,6 @@ export function BusinessProfileForm({
       contactPhone: registrationData?.contactPhone || '',
       mobileNumber: '',
       companyEmail: registrationData?.companyEmail || '',
-      primaryContactFirstName: registrationData?.primaryContactFirstName || '',
-      primaryContactLastName: registrationData?.primaryContactLastName || '',
-      primaryContactEmail: registrationData?.primaryContactEmail || '',
-      primaryContactPhone: registrationData?.primaryContactPhone || '',
       whatsappNumber: '',
       twitterUrl: '',
       instagramUrl: '',
@@ -278,18 +258,17 @@ export function BusinessProfileForm({
 
   // Calculate completion percentage
   useEffect(() => {
-    // Canonical required fields — must match dashboard and backend
     const requiredFields = [
-      'kenyanNationalId', 'name', 'logoUrl',
+      'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness', 'yearEstablished',
       'numberOfEmployees', 'kraPin', 'sector',
-      'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicense',
+      'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
       'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail', 'coordinates'
     ];
     
     const optionalFields = [
       'website', 'whatsappNumber', 'twitterUrl', 'instagramUrl',
       'exportVolumePast3Years', 'currentExportMarkets', 'productionCapacityPast3',
-      'companyStory', 'mobileNumber', 'companySize', 'businessUserOrganisation',
+      'companyStory'
     ];
 
     const completedRequired = requiredFields.filter(field => 
@@ -315,7 +294,7 @@ export function BusinessProfileForm({
     {
       title: 'Business Details',
       icon: FileText,
-      fields: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector']
+      fields: ['typeOfBusiness', 'yearEstablished', 'numberOfEmployees', 'kraPin', 'sector']
     },
     {
       title: 'Documents',
@@ -325,7 +304,7 @@ export function BusinessProfileForm({
     {
       title: 'Location & Contact',
       icon: MapPin,
-      fields: ['town', 'county', 'physicalAddress', 'website', 'contactPhone', 'companyEmail', 'whatsappNumber']
+      fields: ['licenceNumber', 'town', 'county', 'physicalAddress', 'website', 'contactPhone', 'companyEmail', 'whatsappNumber']
     },
     {
       title: 'Social Media & Location',
@@ -341,14 +320,12 @@ export function BusinessProfileForm({
 
   const handleSubmit = async (data: BusinessFormData) => {
     try {
+      // Include certifications + flag so API knows to update them (only on explicit save)
       const dataWithCertifications = {
         ...data,
-        // Mirror exportLicense into licenceNumber so the DB field stays populated
-        licenceNumber: data.exportLicense || data.licenceNumber || '',
         certifications,
         _certificationsUpdated: true,
         _isFinalSave: true,
-        managementTeam: directors.length > 0 ? JSON.stringify(directors) : null,
       };
       await onSubmit(dataWithCertifications as any);
       toast({
@@ -367,9 +344,9 @@ export function BusinessProfileForm({
   // Define required fields for each section
   const sectionRequiredFields: Record<number, string[]> = {
     0: ['kenyanNationalId', 'name', 'logoUrl'], // Basic Details
-    1: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector'], // Business Details
+    1: ['typeOfBusiness', 'yearEstablished', 'numberOfEmployees', 'kraPin', 'sector'], // Business Details
     2: ['registrationCertificateUrl', 'pinCertificateUrl'], // Documents (exportLicenseUrl is optional)
-    3: ['town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'], // Location & Contact
+    3: ['licenceNumber', 'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'], // Location & Contact
     4: ['coordinates'], // Social Media & Location (coordinates is now required)
     5: [], // Company Capacity & Story (all optional)
   };
@@ -499,10 +476,12 @@ export function BusinessProfileForm({
     return new Date(date) <= threeMonthsFromNow && !isExpired(date);
   };
 
-  // Helper: read-only field pre-filled from registration — styled as a plain disabled input
-  const FromRegField = ({ value }: { value: string; label?: string }) => (
-    <div className="mt-1 h-10 px-3 flex items-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 cursor-not-allowed select-none">
-      <span className="flex-1 truncate">{value || <span className="text-gray-400">—</span>}</span>
+  // Helper: read-only field pre-filled from registration
+  const FromRegField = ({ value }: { value: string }) => (
+    <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+      <span className="flex-1">{value}</span>
+      <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">From registration</span>
     </div>
   );
 
@@ -545,7 +524,20 @@ export function BusinessProfileForm({
 
               <div>
                 <Label htmlFor="name">Business Name *</Label>
-                <FromRegField value={form.watch('name') || ''} />
+                {registrationData?.name && !initialData?.name ? (
+                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span>{form.watch('name')}</span>
+                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
+                  </div>
+                ) : (
+                  <Input
+                    id="name"
+                    {...form.register('name')}
+                    placeholder="Enter your business name"
+                    className="mt-1"
+                  />
+                )}
                 {form.formState.errors.name && (
                   <p className="text-sm text-red-600 mt-1">
                     {form.formState.errors.name.message}
@@ -574,11 +566,37 @@ export function BusinessProfileForm({
       case 1: // Business Details
         return (
           <div className="space-y-6">
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Legal Structure</Label>
-                <FromRegField value={form.watch('legalStructure') || ''} />
+                <Label htmlFor="typeOfBusiness">Type of Business *</Label>
+                <SearchableSelect
+                  options={BUSINESS_TYPES}
+                  value={typeOfBusinessIsCustom ? 'Other' : typeOfBusinessVal}
+                  onChange={(selected) => {
+                    if (selected === 'Other') {
+                      setOtherBusinessTypeSelected(true);
+                      form.setValue('typeOfBusiness', '');
+                    } else {
+                      setOtherBusinessTypeSelected(false);
+                      form.setValue('typeOfBusiness', selected);
+                    }
+                  }}
+                  placeholder="Select business type"
+                />
+                {(otherBusinessTypeSelected || typeOfBusinessIsCustom) && (
+                  <Input
+                    className="mt-2"
+                    placeholder="Please specify your business type"
+                    value={typeOfBusinessIsCustom ? typeOfBusinessVal : ''}
+                    onChange={(e) => form.setValue('typeOfBusiness', e.target.value)}
+                    autoFocus={otherBusinessTypeSelected && !typeOfBusinessIsCustom}
+                  />
+                )}
+                {form.formState.errors.typeOfBusiness && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {form.formState.errors.typeOfBusiness.message}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -594,8 +612,21 @@ export function BusinessProfileForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Date of Incorporation</Label>
-                <FromRegField value={registrationData?.dateOfIncorporation || ''} />
+                <Label htmlFor="yearEstablished">Year of Registration/Incorporation *</Label>
+                <Input
+                  id="yearEstablished"
+                  {...form.register('yearEstablished')}
+                  placeholder="YYYY"
+                  type="number"
+                  min="1900"
+                  max={new Date().getFullYear()}
+                  className="mt-1"
+                />
+                {form.formState.errors.yearEstablished && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {form.formState.errors.yearEstablished.message}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -619,60 +650,51 @@ export function BusinessProfileForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="kraPin">KRA PIN *</Label>
-                <Input
-                  id="kraPin"
-                  {...form.register('kraPin')}
-                  placeholder="e.g., A012345678Z"
-                  className="mt-1"
-                />
-                {form.formState.errors.kraPin && (
-                  <p className="text-sm text-red-600 mt-1">{form.formState.errors.kraPin.message}</p>
+                {registrationData?.kraPin && !initialData?.kraPin ? (
+                  <FromRegField value={form.watch('kraPin') || ''} />
+                ) : (
+                  <Input
+                    id="kraPin"
+                    {...form.register('kraPin')}
+                    placeholder="A000000000A"
+                    className="mt-1"
+                  />
                 )}
-              </div>
-
-              <div>
-                <Label>Business Reg. No.</Label>
-                <FromRegField value={form.watch('registrationNumber') || ''} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Industry</Label>
-                <FromRegField value={form.watch('industry') || ''} />
-              </div>
-
-              <div>
-                <Label>Business Sector *</Label>
-                <FromRegField value={form.watch('sector') || ''} />
-                {form.formState.errors.sector && (
+                {form.formState.errors.kraPin && (
                   <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.sector.message}
+                    {form.formState.errors.kraPin.message}
                   </p>
                 )}
               </div>
+
+              <div>
+                <Label htmlFor="registrationNumber">Registration Number</Label>
+                {registrationData?.registrationNumber && !initialData?.registrationNumber ? (
+                  <FromRegField value={form.watch('registrationNumber') || ''} />
+                ) : (
+                  <Input
+                    id="registrationNumber"
+                    {...form.register('registrationNumber')}
+                    placeholder="Enter registration number"
+                    className="mt-1"
+                  />
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Products/Services</Label>
-                <FromRegField value={form.watch('serviceOffering') || ''} />
-              </div>
-
-              <div>
-                <Label htmlFor="businessUserOrganisation">Business User Organisation</Label>
+                <Label htmlFor="taxId">Tax ID</Label>
                 <Input
-                  id="businessUserOrganisation"
-                  {...form.register('businessUserOrganisation')}
-                  placeholder="e.g., KAM, KNCCI"
+                  id="taxId"
+                  {...form.register('taxId')}
+                  placeholder="Enter tax ID"
                   className="mt-1"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="exportLicense">Export License No.</Label>
+                <Label htmlFor="exportLicense">Export License</Label>
                 <Input
                   id="exportLicense"
                   {...form.register('exportLicense')}
@@ -680,73 +702,129 @@ export function BusinessProfileForm({
                   className="mt-1"
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="industry">Industry</Label>
+              {registrationData?.industry && !initialData?.industry ? (
+                <FromRegField value={form.watch('industry') || ''} />
+              ) : (
+                <>
+                  <SearchableSelect
+                    options={[...INDUSTRIES, 'Other']}
+                    value={form.watch('industry')?.startsWith('Other:') ? 'Other' : (form.watch('industry') || '')}
+                    onChange={(value) => {
+                      if (value === 'Other') {
+                        form.setValue('industry', 'Other');
+                        setIndustryOtherText('');
+                      } else {
+                        form.setValue('industry', value);
+                        setIndustryOtherText('');
+                      }
+                      form.setValue('sector', ''); // clear sector on industry change
+                      setSectorOtherText('');
+                    }}
+                    placeholder="Select industry (optional)"
+                  />
+                  {(form.watch('industry') === 'Other' || form.watch('industry')?.startsWith('Other:')) && (
+                    <Input
+                      placeholder="Please specify your industry"
+                      value={industryOtherText}
+                      onChange={(e) => {
+                        setIndustryOtherText(e.target.value);
+                        form.setValue('industry', e.target.value ? `Other: ${e.target.value}` : 'Other');
+                      }}
+                      className="mt-2"
+                    />
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sector">Business Sector *</Label>
+                {registrationData?.sector && !initialData?.sector ? (
+                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span>{form.watch('sector')}</span>
+                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
+                  </div>
+                ) : (
+                  (() => {
+                    const selectedIndustry = form.watch('industry');
+                    const baseIndustry = selectedIndustry?.startsWith('Other:') ? 'Other' : selectedIndustry;
+                    const sectorOptions = baseIndustry && SECTORS_BY_INDUSTRY[baseIndustry]
+                      ? [...SECTORS_BY_INDUSTRY[baseIndustry], 'Other']
+                      : [...Object.values(SECTORS_BY_INDUSTRY).flat(), 'Other'];
+                    const currentSector = form.watch('sector');
+                    return (
+                      <>
+                        <SearchableSelect
+                          options={sectorOptions}
+                          value={currentSector?.startsWith('Other:') ? 'Other' : (currentSector || '')}
+                          onChange={(value) => {
+                            if (value === 'Other') {
+                              form.setValue('sector', 'Other');
+                              setSectorOtherText('');
+                            } else {
+                              form.setValue('sector', value);
+                              setSectorOtherText('');
+                            }
+                          }}
+                          placeholder={selectedIndustry && baseIndustry !== 'Other' ? 'Select business sector' : 'Select industry first (or pick any sector)'}
+                        />
+                        {(currentSector === 'Other' || currentSector?.startsWith('Other:')) && (
+                          <Input
+                            placeholder="Please specify your sector"
+                            value={sectorOtherText}
+                            onChange={(e) => {
+                              setSectorOtherText(e.target.value);
+                              form.setValue('sector', e.target.value ? `Other: ${e.target.value}` : 'Other');
+                            }}
+                            className="mt-2"
+                          />
+                        )}
+                      </>
+                    );
+                  })()
+                )}
+                {form.formState.errors.sector && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {form.formState.errors.sector.message}
+                  </p>
+                )}
+              </div>
 
               <div>
-                <Label htmlFor="productHsCode">Product HS Code</Label>
+                <Label htmlFor="businessUserOrganisation">Business User Organisation</Label>
                 <Input
-                  id="productHsCode"
-                  {...form.register('productHsCode')}
-                  placeholder="e.g., 0901.11"
+                  id="businessUserOrganisation"
+                  {...form.register('businessUserOrganisation')}
+                  placeholder="Enter business organisation (optional)"
                   className="mt-1"
                 />
               </div>
             </div>
 
-            {/* Directors */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Names of Directors</Label>
-                <button
-                  type="button"
-                  onClick={() => setDirectors(prev => [...prev, { name: '', role: '' }])}
-                  className="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Director
-                </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="productHsCode">Product HS Code</Label>
+                <Input
+                  id="productHsCode"
+                  placeholder="e.g. 09 - Coffee, Tea & Spices"
+                  {...form.register('productHsCode')}
+                />
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Harmonized System code for your main export product</p>
               </div>
 
-              {directors.length === 0 && (
-                <p className="text-sm text-gray-400 italic py-2">No directors added yet. Click "Add Director" to begin.</p>
-              )}
-
-              <div className="space-y-2">
-                {directors.map((director, index) => (
-                  <div key={index} className="flex gap-2 items-start">
-                    <Input
-                      placeholder="Full name"
-                      value={director.name}
-                      onChange={(e) => {
-                        const updated = [...directors];
-                        updated[index] = { ...updated[index], name: e.target.value };
-                        setDirectors(updated);
-                      }}
-                      className="flex-1"
-                    />
-                    <Input
-                      placeholder="Role (e.g. CEO, Chairperson)"
-                      value={director.role}
-                      onChange={(e) => {
-                        const updated = [...directors];
-                        updated[index] = { ...updated[index], role: e.target.value };
-                        setDirectors(updated);
-                      }}
-                      className="flex-1"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setDirectors(prev => prev.filter((_, i) => i !== index))}
-                      className="mt-1 text-red-400 hover:text-red-600 flex-shrink-0"
-                      aria-label="Remove director"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
+              <div>
+                <Label htmlFor="serviceOffering">Service Offering</Label>
+                <Input
+                  id="serviceOffering"
+                  placeholder="e.g. Export Trading, Logistics"
+                  {...form.register('serviceOffering')}
+                />
               </div>
             </div>
           </div>
@@ -824,6 +902,21 @@ export function BusinessProfileForm({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <Label htmlFor="licenceNumber">Export License No. *</Label>
+                <Input
+                  id="licenceNumber"
+                  {...form.register('licenceNumber')}
+                  placeholder="Enter export license number"
+                  className="mt-1"
+                />
+                {form.formState.errors.licenceNumber && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {form.formState.errors.licenceNumber.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
                 <Label htmlFor="website">Website Link</Label>
                 <Input
                   id="website"
@@ -832,6 +925,96 @@ export function BusinessProfileForm({
                   type="url"
                   className="mt-1"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="town">City/Town *</Label>
+                {registrationData?.town && !initialData?.town ? (
+                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span>{form.watch('town')}</span>
+                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
+                  </div>
+                ) : (
+                  <Input
+                    id="town"
+                    {...form.register('town')}
+                    placeholder="Enter town"
+                    className="mt-1"
+                  />
+                )}
+                {form.formState.errors.town && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {form.formState.errors.town.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="county">County *</Label>
+                {registrationData?.county && !initialData?.county ? (
+                  <FromRegField value={form.watch('county') || ''} />
+                ) : (
+                  <SearchableSelect
+                    options={KENYAN_COUNTIES}
+                    value={form.watch('county') || ''}
+                    onChange={(value) => form.setValue('county', value)}
+                    placeholder="Select county"
+                  />
+                )}
+                {form.formState.errors.county && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {form.formState.errors.county.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="physicalAddress">Physical Address *</Label>
+              {registrationData?.physicalAddress && !initialData?.physicalAddress ? (
+                <FromRegField value={form.watch('physicalAddress') || ''} />
+              ) : (
+                <Textarea
+                  id="physicalAddress"
+                  {...form.register('physicalAddress')}
+                  placeholder="Enter physical address"
+                  className="mt-1"
+                  rows={3}
+                />
+              )}
+              {form.formState.errors.physicalAddress && (
+                <p className="text-sm text-red-600 mt-1">
+                  {form.formState.errors.physicalAddress.message}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="contactPhone">Company Phone Number *</Label>
+                {registrationData?.contactPhone && !initialData?.contactPhone ? (
+                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span>{form.watch('contactPhone')}</span>
+                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
+                  </div>
+                ) : (
+                  <Input
+                    id="contactPhone"
+                    {...form.register('contactPhone')}
+                    placeholder="+254 700 000 000"
+                    type="tel"
+                    className="mt-1"
+                  />
+                )}
+                {form.formState.errors.contactPhone && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {form.formState.errors.contactPhone.message}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -848,28 +1031,6 @@ export function BusinessProfileForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>City/Town *</Label>
-                <FromRegField value={form.watch('town') || ''} />
-              </div>
-
-              <div>
-                <Label>County *</Label>
-                <FromRegField value={form.watch('county') || ''} />
-              </div>
-            </div>
-
-            <div>
-              <Label>Physical Address *</Label>
-              <FromRegField value={form.watch('physicalAddress') || ''} />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Company Phone *</Label>
-                <FromRegField value={form.watch('contactPhone') || ''} />
-              </div>
-
-              <div>
                 <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
                 <Input
                   id="whatsappNumber"
@@ -879,32 +1040,29 @@ export function BusinessProfileForm({
                   className="mt-1"
                 />
               </div>
-            </div>
 
-            <div>
-              <Label>Company Email *</Label>
-              <FromRegField value={form.watch('companyEmail') || ''} />
-            </div>
-
-            <div className="border-t pt-4">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Primary Contact</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>First Name</Label>
-                  <FromRegField value={form.watch('primaryContactFirstName') || ''} />
-                </div>
-                <div>
-                  <Label>Last Name</Label>
-                  <FromRegField value={form.watch('primaryContactLastName') || ''} />
-                </div>
-                <div>
-                  <Label>Email</Label>
-                  <FromRegField value={form.watch('primaryContactEmail') || ''} />
-                </div>
-                <div>
-                  <Label>Phone</Label>
-                  <FromRegField value={form.watch('primaryContactPhone') || ''} />
-                </div>
+              <div>
+                <Label htmlFor="companyEmail">Company Email *</Label>
+                {registrationData?.companyEmail && !initialData?.companyEmail ? (
+                  <div className="mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span>{form.watch('companyEmail')}</span>
+                    <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">From registration</span>
+                  </div>
+                ) : (
+                  <Input
+                    id="companyEmail"
+                    {...form.register('companyEmail')}
+                    placeholder="company@example.com"
+                    type="email"
+                    className="mt-1"
+                  />
+                )}
+                {form.formState.errors.companyEmail && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {form.formState.errors.companyEmail.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>

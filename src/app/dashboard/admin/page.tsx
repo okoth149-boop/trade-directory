@@ -141,20 +141,16 @@ export default function AdminDashboard() {
       setError(null);
       setLoading(true);
       
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-      const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
-      // Fetch from admin endpoints so all businesses/users are included regardless of verification
-      const [businessesRes, productsRes, usersRes] = await Promise.all([
-        fetch('/api/admin/businesses?limit=10000&page=1', { headers: authHeaders })
-          .then(r => r.ok ? r.json() : { businesses: [] }),
-        apiClient.getProducts().catch(() => ({ products: [] })),
-        apiClient.getUsers().catch(() => ({ users: [], total: 0 })),
+      // Fetch businesses, products, and users
+      const [businessesResponse, productsResponse, usersResponse] = await Promise.all([
+        apiClient.getBusinesses(),
+        apiClient.getProducts(),
+        apiClient.getUsers().catch(() => ({ users: [], total: 0 })), // Fallback if users endpoint fails
       ]);
-
-      const businesses = businessesRes.businesses || [];
-      const products = productsRes.products || [];
-      const users = usersRes.users || [];
+      
+      const businesses = businessesResponse.businesses || [];
+      const products = productsResponse.products || [];
+      const users = usersResponse.users || [];
       
       // Calculate current month start
       const currentMonth = new Date();

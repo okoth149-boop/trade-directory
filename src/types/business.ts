@@ -16,16 +16,19 @@ export interface BusinessFormData {
   // Business Details
   businessPurpose?: string;
   dateOfIncorporation?: string;
-  legalStructure?: string;
+  typeOfBusiness: string;
+  yearEstablished: string;
   numberOfEmployees: string;
   companySize?: string;
   kraPin: string;
   registrationNumber?: string;
+  taxId?: string;
   exportLicense?: string;
   sector: string;
   industry?: string;
   productHsCode?: string;
   serviceOffering?: string;
+  legalStructure?: string;
   businessUserOrganisation: string;
   shareholders?: string;
   managementTeam?: string;

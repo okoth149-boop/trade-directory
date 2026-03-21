@@ -117,14 +117,6 @@ const adminMenuItems: MenuItem[] = [
       { id: 'admin-success-stories', title: 'Success Stories', type: 'item', icon: 'trophy', url: '/dashboard/admin/success-stories' },
     ],
   },
-  {
-    id: 'admin-activity',
-    title: 'Activity',
-    type: 'group',
-    children: [
-      { id: 'admin-logs', title: 'My Activity Logs', type: 'item', icon: 'file-text', url: '/dashboard/admin/logs' },
-    ],
-  },
 ];
 
 // Exporter Menu Items

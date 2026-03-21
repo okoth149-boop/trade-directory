@@ -735,15 +735,16 @@ export default function BusinessVerificationPage() {
           b.coordinates || '',
           
           // Business Details
+          b.typeOfBusiness || '',
           b.businessUserOrganisation || '',
           b.companySize || '',
           b.numberOfEmployees || '',
-          b.dateOfIncorporation || '',
-          b.legalStructure || '',
+          b.yearEstablished || '',
           
           // Registration
           b.registrationNumber || '',
           b.kraPin || '',
+          b.taxId || '',
           b.exportLicense || '',
           b.licenceNumber || '',
           b.kenyanNationalId || '',

@@ -29,7 +29,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { kenyanCounties } from '@/lib/kenyan-counties';
 import { ExporterProfileCard } from '@/components/exporter-profile-card';
 import { EXPORT_MARKETS, BUSINESS_SECTORS } from '@/types/business';
-import { INDUSTRIES, SECTORS_BY_INDUSTRY, COUNTIES, KENYAN_CITIES } from '@/lib/constants';
+import { INDUSTRIES } from '@/lib/constants';
 
 // FIX #7: sessionStorage cache keys
 const PRODUCT_OPTIONS_CACHE_KEY = 'dir_product_options_v1';
@@ -37,6 +37,8 @@ const BUSINESSES_CACHE_KEY = 'dir_businesses_default_v1';
 const BUSINESSES_CACHE_TTL = 10_000; // 10 seconds — near-instant freshness
 
 const filterCategories = [
+  { id: 'sector', name: 'Sector', options: BUSINESS_SECTORS },
+  { id: 'industry', name: 'Industry', options: [...INDUSTRIES] },
   { id: 'exportMarkets', name: 'Export Markets', options: EXPORT_MARKETS.map(m => m.label) },
   { id: 'numberOfEmployees', name: 'Company Size (Employees)', options: [
     '1-49', '50-100', '101-200', '201-500', '501-1000', '1000+',
@@ -47,6 +49,9 @@ const filterCategories = [
   { id: 'certification', name: 'Certification', options: [
     'ISO 9001', 'ISO 14001', 'Fair Trade', 'GlobalG.A.P.', 'Organic Certified',
     'HACCP', 'KEBS Mark of Quality', 'Rainforest Alliance', 'Made in Kenya',
+  ] },
+  { id: 'rating', name: 'Rating', options: [
+    '4 stars & up', '3 stars & up', '2 stars & up', '1 star & up',
   ] },
 ];
 
@@ -91,12 +96,6 @@ const Filters = ({
     ? categoriesToUse.filter(cat => cat.id !== 'rating')
     : categoriesToUse;
 
-  // Derive sector options based on selected industries
-  const selectedIndustries = selectedFilters['industry'] || [];
-  const sectorOptions: string[] = selectedIndustries.length > 0
-    ? selectedIndustries.flatMap(ind => SECTORS_BY_INDUSTRY[ind] || [])
-    : Object.values(SECTORS_BY_INDUSTRY).flat();
-
   return (
     <div className="h-full flex flex-col">
       <ScrollArea className="flex-grow">
@@ -117,11 +116,11 @@ const Filters = ({
             </AccordionItem>
           )}
           <AccordionItem value="county">
-            <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">County</AccordionTrigger>
+            <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">Location</AccordionTrigger>
             <AccordionContent className="pt-2">
               <ScrollArea className="h-60 px-4">
                 <div className="space-y-2 pb-2">
-                  {COUNTIES.map(county => (
+                  {kenyanCounties.map(county => (
                     <div key={county} className="flex items-center space-x-2">
                       <Checkbox
                         id={`county-${county}`}
@@ -135,79 +134,6 @@ const Filters = ({
               </ScrollArea>
             </AccordionContent>
           </AccordionItem>
-
-          <AccordionItem value="city">
-            <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">City</AccordionTrigger>
-            <AccordionContent className="pt-2">
-              <ScrollArea className="h-60 px-4">
-                <div className="space-y-2 pb-2">
-                  {[...new Set(KENYAN_CITIES)].map(city => (
-                    <div key={city} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`city-${city}`}
-                        checked={selectedFilters['town']?.includes(city) || false}
-                        onCheckedChange={() => onFilterChange('town', city)}
-                      />
-                      <Label htmlFor={`city-${city}`} className="font-normal cursor-pointer flex-grow py-1">{city}</Label>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Industry — always full list */}
-          <AccordionItem value="industry">
-            <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">Industry</AccordionTrigger>
-            <AccordionContent className="pt-2">
-              <ScrollArea className="h-60 px-4">
-                <div className="space-y-2 pb-2">
-                  {INDUSTRIES.map(industry => (
-                    <div key={industry} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`industry-${industry}`}
-                        checked={selectedFilters['industry']?.includes(industry) || false}
-                        onCheckedChange={() => onFilterChange('industry', industry)}
-                      />
-                      <Label htmlFor={`industry-${industry}`} className="font-normal cursor-pointer flex-grow py-1">{industry}</Label>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Sector — filtered by selected industries */}
-          <AccordionItem value="sector">
-            <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">
-              Sector
-              {selectedIndustries.length > 0 && (
-                <span className="ml-2 text-xs font-normal text-green-600">
-                  ({selectedIndustries.length} {selectedIndustries.length === 1 ? 'industry' : 'industries'} selected)
-                </span>
-              )}
-            </AccordionTrigger>
-            <AccordionContent className="pt-2">
-              {selectedIndustries.length === 0 && (
-                <p className="text-xs text-gray-400 px-4 pb-2 italic">Select an industry above to narrow sectors</p>
-              )}
-              <ScrollArea className="h-60 px-4">
-                <div className="space-y-2 pb-2">
-                  {sectorOptions.map(sector => (
-                    <div key={sector} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`sector-${sector}`}
-                        checked={selectedFilters['sector']?.includes(sector) || false}
-                        onCheckedChange={() => onFilterChange('sector', sector)}
-                      />
-                      <Label htmlFor={`sector-${sector}`} className="font-normal cursor-pointer flex-grow py-1">{sector}</Label>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </AccordionContent>
-          </AccordionItem>
-
           {availableCategories.map(category => {
             const useScrollArea = category.options.length > 8;
             return (
@@ -271,25 +197,6 @@ const Filters = ({
               <p className="text-xs text-gray-500 mt-1">Search by service type keyword</p>
             </AccordionContent>
           </AccordionItem>
-          {viewMode !== 'map' && (
-            <AccordionItem value="rating">
-              <AccordionTrigger className="font-semibold hover:no-underline px-4 py-3">Rating</AccordionTrigger>
-              <AccordionContent className="pt-2">
-                <div className="space-y-2 px-4 pb-2">
-                  {['4 stars & up', '3 stars & up', '2 stars & up', '1 star & up'].map(option => (
-                    <div key={option} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`rating-${option}`}
-                        checked={selectedFilters['rating']?.includes(option) || false}
-                        onCheckedChange={() => onFilterChange('rating', option)}
-                      />
-                      <Label htmlFor={`rating-${option}`} className="font-normal cursor-pointer flex-grow py-1">{option}</Label>
-                    </div>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          )}
         </Accordion>
       </ScrollArea>
       {activeFilterCount > 0 && (
@@ -642,14 +549,6 @@ function DirectoryPageContentClient() {
             case 'county': {
               const loc = (business.county || business.location || '').toLowerCase();
               return values.some(v => loc.includes(v.toLowerCase()));
-            }
-            case 'town': {
-              const t = (business.town || '').toLowerCase();
-              return values.some(v => t.includes(v.toLowerCase()));
-            }
-            case 'industry': {
-              const ind = (business.industry || '').toLowerCase();
-              return values.some(v => ind === v.toLowerCase());
             }
             case 'sector': {
               const s = (business.sector || '').toLowerCase();

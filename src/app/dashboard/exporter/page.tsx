@@ -206,35 +206,41 @@ export default function ExporterDashboard() {
 
   const calculateProfileCompleteness = async (): Promise<number> => {
     try {
-      // Fetch the current exporter's own business profile (not the public directory)
-      const response = await apiClient.makeRequest<{ business: any }>('/exporter/business-profile');
+      // Fetch current user's business
+      const businesses = await apiClient.getBusinesses({ limit: 1 });
       
-      if (!response?.business) {
+      if (!businesses.businesses || businesses.businesses.length === 0) {
         return 0;
       }
       
-      const business = response.business;
+      const business = businesses.businesses[0];
       
-      // Canonical required fields — must match backend PUT handler
+      // Define required fields (matching the business profile form)
       const requiredFields = [
-        'kenyanNationalId', 'name', 'logoUrl',
-        'numberOfEmployees', 'kraPin', 'sector',
-        'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicense',
-        'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail',
-        'coordinates',
+        'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness', 'yearEstablished',
+        'numberOfEmployees', 'kraPin', 'sector', 'businessUserOrganisation',
+        'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
+        'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'
       ];
       
-      // Optional fields that still contribute to completeness
+      // Define optional fields
       const optionalFields = [
-        'website', 'whatsappNumber', 'twitterUrl', 'instagramUrl',
+        'website', 'whatsappNumber', 'twitterUrl', 'instagramUrl', 'coordinates',
         'exportVolumePast3Years', 'currentExportMarkets', 'productionCapacityPast3',
-        'companyStory', 'mobileNumber', 'companySize', 'businessUserOrganisation',
+        'companyStory', 'registrationNumber', 'taxId', 'mobileNumber', 'companySize'
       ];
       
-      const isPresent = (val: any) => val !== null && val !== undefined && val !== '';
-
-      const completedRequired = requiredFields.filter(f => isPresent(business[f])).length;
-      const completedOptional = optionalFields.filter(f => isPresent(business[f])).length;
+      // Count completed required fields
+      const completedRequired = requiredFields.filter(field => {
+        const value = business[field as keyof typeof business];
+        return value !== null && value !== undefined && value !== '';
+      }).length;
+      
+      // Count completed optional fields
+      const completedOptional = optionalFields.filter(field => {
+        const value = business[field as keyof typeof business];
+        return value !== null && value !== undefined && value !== '';
+      }).length;
       
       const totalFields = requiredFields.length + optionalFields.length;
       const completedFields = completedRequired + completedOptional;
