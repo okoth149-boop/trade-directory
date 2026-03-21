@@ -278,8 +278,9 @@ export function BusinessProfileForm({
 
   // Calculate completion percentage
   useEffect(() => {
+    // Canonical required fields — must match dashboard and backend
     const requiredFields = [
-      'kenyanNationalId', 'name', 'logoUrl', 'typeOfBusiness',
+      'kenyanNationalId', 'name', 'logoUrl',
       'numberOfEmployees', 'kraPin', 'sector',
       'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
       'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail', 'coordinates'
@@ -288,7 +289,7 @@ export function BusinessProfileForm({
     const optionalFields = [
       'website', 'whatsappNumber', 'twitterUrl', 'instagramUrl',
       'exportVolumePast3Years', 'currentExportMarkets', 'productionCapacityPast3',
-      'companyStory'
+      'companyStory', 'mobileNumber', 'companySize', 'businessUserOrganisation',
     ];
 
     const completedRequired = requiredFields.filter(field => 

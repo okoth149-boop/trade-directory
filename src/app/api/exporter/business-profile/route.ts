@@ -306,13 +306,14 @@ export async function PUT(request: NextRequest) {
 
     // Debug logging for the three fields of interest
 
-    // Calculate profile completion — check against existing business for reg-owned fields
+    // Canonical required fields — must match dashboard and form
     const editableRequiredFields = [
       'kenyanNationalId', 'logoUrl',
-      'numberOfEmployees', 'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
+      'numberOfEmployees', 'kraPin',
+      'registrationCertificateUrl', 'pinCertificateUrl', 'licenceNumber',
       'coordinates',
     ];
-    const regOwnedRequired = ['name', 'kraPin', 'sector', 'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'];
+    const regOwnedRequired = ['name', 'sector', 'town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'];
     const editableComplete = editableRequiredFields.filter(f => businessData[f] ?? existingBusiness[f as keyof typeof existingBusiness]).length;
     const regOwnedComplete = regOwnedRequired.filter(f => existingBusiness[f as keyof typeof existingBusiness]).length;
     const profileComplete = (editableComplete + regOwnedComplete) === (editableRequiredFields.length + regOwnedRequired.length);
