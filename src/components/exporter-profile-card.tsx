@@ -13,7 +13,7 @@ import { ExportOptions, ExportQuality } from './export-options-dialog';
 // Extended Business interface for the profile card component
 interface BusinessProfile extends Business {
   registrationDate?: string;
-  yearOfEstablishment?: string;
+  yearOfEstablishment?: string; // legacy fallback
   companyLogoUrl?: string;
   latitude?: number;
   longitude?: number;
@@ -146,11 +146,8 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
     ? formatDistanceToNow(new Date(business.updatedAt), { addSuffix: true })
     : 'recently';
   
-  // Get establishment year from either yearEstablished or yearOfEstablishment
-  const establishmentYear = business.yearEstablished || business.yearOfEstablishment;
-  const businessAge = isMounted && establishmentYear 
-    ? new Date().getFullYear() - Number(establishmentYear)
-    : null;
+  // Get date of incorporation (replaces yearEstablished)
+  const dateOfIncorporation = business.dateOfIncorporation || (business as any).yearEstablished || (business as any).yearOfEstablishment;
 
   // Parse coordinates from the coordinates string field
   const getCoordinates = () => {
@@ -458,8 +455,7 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
                     )}
                   </div>
                   <div className="text-base text-gray-500 font-medium">
-                    Est. {establishmentYear || 'N/A'}
-                    {businessAge && <span suppressHydrationWarning> &bull; {businessAge} years</span>}
+                    {dateOfIncorporation ? `Inc. ${dateOfIncorporation}` : ''}
                   </div>
                 </div>
               </div>
@@ -546,11 +542,10 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
                   </div>
                   <div>
                     <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                      Established
+                      Date of Incorporation
                     </p>
                     <p className="text-slate-800 font-bold text-xs sm:text-sm">
-                      {establishmentYear || 'N/A'}
-                      {businessAge && <span className="text-slate-500 ml-1" suppressHydrationWarning>({businessAge}y)</span>}
+                      {dateOfIncorporation || 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -566,9 +561,9 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
                 
                 <div className="pt-2 border-t border-slate-200/50">
                   <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                    Reg No:
+                    KRA PIN:
                   </p>
-                  <p className="text-slate-800 font-mono text-xs sm:text-sm font-bold tracking-tight">{business.kraPin || 'A012345678Z'}</p>
+                  <p className="text-slate-800 font-mono text-xs sm:text-sm font-bold tracking-tight">{business.kraPin || 'N/A'}</p>
                 </div>
               </div>
             </div>

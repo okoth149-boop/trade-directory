@@ -146,6 +146,7 @@ export interface Business {
   businessUserOrganisation?: string;
   companySize?: string;
   numberOfEmployees?: string;
+  dateOfIncorporation?: string; // from registration form
   
   // Registration & Compliance
   kenyanNationalId?: string;
