@@ -17,7 +17,6 @@ prisma/dev.db-journal
 *.db-journal
 
 # Logs
-logs
 *.log
 
 # IDE
