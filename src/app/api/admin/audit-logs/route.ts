@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
 
     // ── Audit logs (admin CRUD actions) ────────────────────────────────────
     const where: Record<string, unknown> = {};
-    if (userId) where.adminId = userId;
+    if (userId) where.actorUserId = userId;
     if (action) where.action = { contains: action, mode: 'insensitive' };
     if (search) {
       where.OR = [

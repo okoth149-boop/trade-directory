@@ -76,7 +76,7 @@ export default function SystemLogsPage() {
     const params = new URLSearchParams({
       page: String(paginationModel.page + 1),
       limit: String(paginationModel.pageSize),
-      type: tab === 0 ? 'audit' : 'activity',
+      type: tab === 0 && isSuperAdmin ? 'audit' : 'activity',
       ...(debouncedSearch && { search: debouncedSearch }),
       ...(actionFilter && { action: actionFilter }),
       ...(startDate && { startDate }),
