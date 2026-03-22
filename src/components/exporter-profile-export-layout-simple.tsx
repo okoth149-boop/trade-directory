@@ -17,10 +17,17 @@ interface ExporterProfileExportLayoutSimpleProps {
 }
 
 const VerifiedBadge = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '24px', height: '24px' }} xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '20px', height: '20px' }} xmlns="http://www.w3.org/2000/svg">
     <path d="M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.7l-3.61.81.34 3.7L1 12l2.44 2.79-.34 3.69 3.61.82 1.89 3.2L12 21.04l3.4 1.46 1.89-3.2 3.61-.82-.34-3.69L23 12zm-12.91 4.72l-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z"/>
   </svg>
 );
+
+// Truncate text to a max word count
+const truncate = (text: string, maxWords: number) => {
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(' ') + '…';
+};
 
 export function ExporterProfileExportLayoutSimple({
   business,
@@ -30,173 +37,155 @@ export function ExporterProfileExportLayoutSimple({
 }: ExporterProfileExportLayoutSimpleProps) {
   const products = business.products || [];
   const isPortrait = orientation === 'portrait';
+  const maxProducts = isPortrait ? 6 : 5;
 
   const renderStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    const full = Math.floor(rating);
+    const half = rating % 1 !== 0;
+    const empty = 5 - full - (half ? 1 : 0);
     return (
-      <div className="flex items-center gap-1">
-        {Array(fullStars).fill(0).map((_, i) => (
-          <span key={`full-${i}`} className="text-gray-800 text-lg leading-none">★</span>
-        ))}
-        {hasHalfStar && <span className="text-gray-800 text-lg leading-none">☆</span>}
-        {Array(emptyStars).fill(0).map((_, i) => (
-          <span key={`empty-${i}`} className="text-gray-400 text-lg leading-none">☆</span>
-        ))}
-        <span className="ml-2 text-base font-bold text-gray-800">{rating.toFixed(1)}</span>
-      </div>
+      <span className="text-sm">
+        {'★'.repeat(full)}{half ? '½' : ''}{'☆'.repeat(empty)} {rating.toFixed(1)}
+      </span>
     );
   };
 
-  // Helper — only render a row if value is truthy
+  // Only render if value is truthy
   const InfoRow = ({ label, value }: { label: string; value?: string | null }) =>
     value ? (
-      <div>
-        <span className="font-bold text-gray-700">{label}: </span>
+      <div className="flex gap-1 text-xs leading-snug">
+        <span className="font-bold text-gray-600 shrink-0">{label}:</span>
         <span className="text-gray-900">{value}</span>
       </div>
     ) : null;
 
+  // Location string for header (deduplicated)
+  const locationParts = [business.town, business.county, business.location]
+    .filter(Boolean)
+    .filter((v, i, arr) => arr.indexOf(v) === i);
+  const locationStr = [...new Set([...locationParts, 'Kenya'])].join(', ');
+
   return (
     <A4ExportWrapper orientation={orientation} quality={quality}>
-      <div className="w-full h-full bg-white p-10 flex flex-col">
+      <div className="w-full h-full bg-white px-8 py-6 flex flex-col text-xs">
 
         {/* HEADER */}
-        <div className="mb-5 pb-4 border-b-2 border-gray-900 flex-shrink-0">
-          <div className="flex items-start justify-between gap-4 mb-3">
-            <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="mb-3 pb-3 border-b-2 border-gray-900 flex-shrink-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              {/* Logo */}
               <div className="flex-shrink-0">
                 {business.logoUrl ? (
-                  <div className="w-16 h-16 border-2 border-gray-900 bg-white overflow-hidden">
-                    <img src={business.logoUrl} alt={`${business.name} logo`} className="w-full h-full object-contain p-1" />
+                  <div className="w-14 h-14 border-2 border-gray-900 bg-white overflow-hidden">
+                    <img src={business.logoUrl} alt={business.name} className="w-full h-full object-contain p-1" />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 border-2 border-gray-900 bg-white flex items-center justify-center">
-                    <span className="text-3xl font-bold text-gray-900">{business.name.charAt(0).toUpperCase()}</span>
+                  <div className="w-14 h-14 border-2 border-gray-900 bg-white flex items-center justify-center">
+                    <span className="text-2xl font-bold text-gray-900">{business.name.charAt(0).toUpperCase()}</span>
                   </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0 pt-1">
-                <h1 className="text-xl font-bold text-gray-900 leading-tight break-words">{business.name}</h1>
-                <p className="text-sm text-gray-700 mt-1">
-                  {[business.location, business.county, 'Kenya'].filter(Boolean).join(', ')}
-                </p>
-                <p className="text-sm text-gray-700">
+              {/* Name + meta */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg font-bold text-gray-900 leading-tight">{business.name}</h1>
+                <p className="text-xs text-gray-600 mt-0.5">{locationStr}</p>
+                <p className="text-xs text-gray-600">
                   {[business.sector, business.industry].filter(Boolean).join(' · ')}
                   {business.dateOfIncorporation && ` · Inc. ${business.dateOfIncorporation}`}
                 </p>
+                {businessRating && (
+                  <p className="text-xs text-gray-700 mt-0.5 font-bold">{renderStars(businessRating)}</p>
+                )}
               </div>
             </div>
-            <div className="flex-shrink-0">
-              {business.verificationStatus === 'VERIFIED' ? (
-                <div className="flex flex-col items-center gap-0.5 px-3 py-2 border-2 border-gray-900">
-                  <VerifiedBadge />
-                  <span className="text-xs font-bold text-gray-900 uppercase">Verified</span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-0.5 px-3 py-2 border-2 border-gray-900">
-                  <span className="text-xs font-bold text-gray-700 uppercase">Pending</span>
-                </div>
-              )}
+            {/* Verification badge */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-0.5 px-2 py-1.5 border-2 border-gray-900">
+              <VerifiedBadge />
+              <span className="text-[10px] font-bold text-gray-900 uppercase">
+                {business.verificationStatus === 'VERIFIED' ? 'Verified' : 'Pending'}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* MAIN CONTENT */}
+        {/* MAIN CONTENT — 2 columns */}
         <div className="flex-1 overflow-hidden">
-          <div className={`grid gap-5 h-full ${isPortrait ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <div className={`grid gap-4 h-full ${isPortrait ? 'grid-cols-1' : 'grid-cols-2'}`}>
 
             {/* LEFT COLUMN */}
-            <div className="space-y-4 overflow-hidden">
+            <div className="space-y-3 overflow-hidden">
 
               {/* Products & Services */}
               <div>
-                <h2 className="text-lg font-bold text-gray-900 mb-2 pb-1 border-b-2 border-gray-900">Products & Services</h2>
+                <h2 className="text-sm font-bold text-gray-900 mb-1.5 pb-1 border-b border-gray-900">Products & Services</h2>
                 {business.serviceOffering && (
-                  <p className="text-sm text-gray-700 mb-2">{business.serviceOffering}</p>
+                  <p className="text-xs text-gray-700 mb-1.5 italic">{truncate(business.serviceOffering, 20)}</p>
                 )}
                 {Array.isArray(products) && products.length > 0 ? (
-                  <div className="space-y-2">
-                    {products.slice(0, isPortrait ? 10 : 8).map((product: Product, index: number) => (
-                      <div key={index} className="text-sm">
-                        <p className="font-bold text-gray-900">{product.name}</p>
-                        {product.description && (
-                          <p className="text-xs text-gray-600 mt-0.5">{product.description}</p>
-                        )}
-                      </div>
+                  <ul className="space-y-0.5 list-disc list-inside">
+                    {products.slice(0, maxProducts).map((p: Product, i: number) => (
+                      <li key={i} className="text-xs text-gray-900">{p.name}</li>
                     ))}
-                  </div>
+                  </ul>
                 ) : (
-                  <p className="text-sm text-gray-700">Premium quality products for export markets</p>
+                  <p className="text-xs text-gray-600">Premium quality products for export markets</p>
                 )}
                 {business.productHsCode && (
-                  <p className="text-xs text-gray-600 mt-2">
-                    <span className="font-bold">HS Code: </span>{business.productHsCode}
-                  </p>
+                  <p className="text-xs text-gray-600 mt-1"><span className="font-bold">HS Code:</span> {business.productHsCode}</p>
                 )}
               </div>
 
               {/* Business Information */}
               <div>
-                <h2 className="text-lg font-bold text-gray-900 mb-2 pb-1 border-b-2 border-gray-900">Business Information</h2>
-                <div className="space-y-2 text-sm">
+                <h2 className="text-sm font-bold text-gray-900 mb-1.5 pb-1 border-b border-gray-900">Business Information</h2>
+                <div className="space-y-1">
                   <InfoRow label="Type of Business" value={business.typeOfBusiness} />
                   <InfoRow label="Legal Structure" value={(business as any).legalStructure} />
-                  <InfoRow label="Industry" value={business.industry} />
-                  <InfoRow label="Sector" value={business.sector} />
                   <InfoRow label="Date of Incorporation" value={business.dateOfIncorporation} />
-                  <InfoRow label="Registration Number" value={business.registrationNumber} />
+                  <InfoRow label="Registration No." value={business.registrationNumber} />
                   <InfoRow label="KRA PIN" value={business.kraPin} />
                   <InfoRow label="Company Size" value={business.companySize} />
-                  <InfoRow label="Number of Employees" value={business.numberOfEmployees} />
-                  <InfoRow label="Export Volume (3 Years)" value={business.exportVolumePast3Years} />
-                  <InfoRow label="Production Capacity (3 Years)" value={business.productionCapacityPast3} />
+                  <InfoRow label="Employees" value={business.numberOfEmployees} />
                   <InfoRow label="Export Markets" value={business.currentExportMarkets} />
-                  {businessRating && (
-                    <div className="pt-2">
-                      <span className="font-bold text-gray-700 block mb-1">Customer Rating:</span>
-                      {renderStars(businessRating)}
-                    </div>
-                  )}
+                  <InfoRow label="Export Volume (3 yrs)" value={business.exportVolumePast3Years} />
+                  <InfoRow label="Production Capacity (3 yrs)" value={business.productionCapacityPast3} />
                 </div>
               </div>
             </div>
 
             {/* RIGHT COLUMN */}
-            <div className="space-y-4 overflow-hidden">
+            <div className="space-y-3 overflow-hidden">
 
               {/* Contact Information */}
               <div>
-                <h2 className="text-lg font-bold text-gray-900 mb-2 pb-1 border-b-2 border-gray-900">Contact Information</h2>
-                <div className="space-y-2 text-sm">
+                <h2 className="text-sm font-bold text-gray-900 mb-1.5 pb-1 border-b border-gray-900">Contact Information</h2>
+                <div className="space-y-1">
                   <InfoRow label="Email" value={business.contactEmail || business.email} />
-                  <InfoRow label="Company Email" value={business.companyEmail !== business.contactEmail ? business.companyEmail : null} />
                   <InfoRow label="Phone" value={business.contactPhone} />
                   <InfoRow label="Mobile" value={business.mobileNumber} />
                   <InfoRow label="WhatsApp" value={business.whatsappNumber} />
                   <InfoRow label="Website" value={business.websiteUrl || business.website} />
-                  <InfoRow label="Physical Address" value={business.physicalAddress} />
-                  <InfoRow label="County" value={business.county} />
-                  <InfoRow label="Town" value={business.town} />
+                  <InfoRow label="Address" value={business.physicalAddress} />
                 </div>
               </div>
 
-              {/* Company Story */}
+              {/* About — capped at 60 words */}
               {business.companyStory && (
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-2 pb-1 border-b-2 border-gray-900">About</h2>
-                  <p className="text-sm text-gray-700 leading-relaxed">{business.companyStory}</p>
+                  <h2 className="text-sm font-bold text-gray-900 mb-1.5 pb-1 border-b border-gray-900">About</h2>
+                  <p className="text-xs text-gray-700 leading-relaxed">
+                    {truncate(business.companyStory, 60)}
+                  </p>
                 </div>
               )}
 
               {/* Certifications */}
               {business.certifications && business.certifications.length > 0 && (
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-2 pb-1 border-b-2 border-gray-900">Certifications</h2>
-                  <div className="flex flex-wrap gap-2">
+                  <h2 className="text-sm font-bold text-gray-900 mb-1.5 pb-1 border-b border-gray-900">Certifications</h2>
+                  <div className="flex flex-wrap gap-1.5">
                     {business.certifications.map((cert: any, i: number) => (
-                      <span key={i} className="text-xs font-medium text-gray-800 px-2 py-1 border border-gray-900">
+                      <span key={i} className="text-[10px] font-medium text-gray-800 px-1.5 py-0.5 border border-gray-700">
                         {cert.name}
                       </span>
                     ))}
@@ -208,16 +197,14 @@ export function ExporterProfileExportLayoutSimple({
         </div>
 
         {/* FOOTER */}
-        <div className="mt-5 pt-3 border-t-2 border-gray-900 flex items-center justify-between flex-shrink-0">
+        <div className="mt-3 pt-2 border-t-2 border-gray-900 flex items-center justify-between flex-shrink-0">
           <div>
-            <p className="text-sm font-medium text-gray-900">Kenya Export Promotion & Branding Agency</p>
-            <p className="text-xs text-gray-700">E-Trade Directory • www.keproba.go.ke</p>
+            <p className="text-xs font-medium text-gray-900">Kenya Export Promotion & Branding Agency</p>
+            <p className="text-[10px] text-gray-600">E-Trade Directory • www.keproba.go.ke</p>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-700">
-              Generated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-            </p>
-          </div>
+          <p className="text-[10px] text-gray-600">
+            Generated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+          </p>
         </div>
       </div>
     </A4ExportWrapper>
