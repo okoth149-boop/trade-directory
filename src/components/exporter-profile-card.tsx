@@ -601,45 +601,105 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
                     <div>
                       <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Email Address:</label>
                       <p className="text-[#007a46] font-bold text-sm break-all underline decoration-emerald-100 underline-offset-4">
-                        {business.contactEmail || business.email || 'contact@business.com'}
+                        {business.contactEmail || (business as any).email || ''}
                       </p>
                     </div>
-                    <div>
-                      <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1 flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        Phone Number:
-                      </label>
-                      <p className="text-slate-800 font-bold text-sm">
-                        {business.contactPhone || '+254 700 000 000'}
-                      </p>
-                    </div>
+                    {business.companyEmail && business.companyEmail !== business.contactEmail && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Company Email:</label>
+                        <p className="text-[#007a46] font-bold text-sm break-all underline decoration-emerald-100 underline-offset-4">
+                          {business.companyEmail}
+                        </p>
+                      </div>
+                    )}
+                    {business.contactPhone && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1 flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          Phone Number:
+                        </label>
+                        <p className="text-slate-800 font-bold text-sm">{business.contactPhone}</p>
+                      </div>
+                    )}
+                    {business.mobileNumber && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Mobile:</label>
+                        <p className="text-slate-800 font-bold text-sm">{business.mobileNumber}</p>
+                      </div>
+                    )}
+                    {business.whatsappNumber && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">WhatsApp:</label>
+                        <p className="text-slate-800 font-bold text-sm">{business.whatsappNumber}</p>
+                      </div>
+                    )}
+                    {(business.website || (business as any).websiteUrl) && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1 flex items-center gap-1">
+                          <Globe className="h-3 w-3" />
+                          Website:
+                        </label>
+                        <p className="text-[#007a46] font-bold text-sm break-all underline decoration-emerald-100 underline-offset-4">
+                          {business.website || (business as any).websiteUrl}
+                        </p>
+                      </div>
+                    )}
+                    {business.physicalAddress && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Physical Address:</label>
+                        <p className="text-slate-800 font-medium text-sm">{business.physicalAddress}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <h3 className="font-bold text-lg text-gray-900 border-b-2 border-gray-200 pb-2">Business Details</h3>
                   <div className="space-y-2">
-                    <div>
-                      <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Sector:</label>
-                      <p className="text-slate-800 font-bold text-sm">{business.sector || 'Agriculture'}</p>
-                    </div>
-                    {business.currentExportMarkets && typeof business.currentExportMarkets === 'string' && (
+                    {business.sector && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Sector:</label>
+                        <p className="text-slate-800 font-bold text-sm">{business.sector}</p>
+                      </div>
+                    )}
+                    {business.industry && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Industry:</label>
+                        <p className="text-slate-800 font-bold text-sm">{business.industry}</p>
+                      </div>
+                    )}
+                    {business.serviceOffering && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Products / Services:</label>
+                        <p className="text-slate-800 font-medium text-sm">{business.serviceOffering}</p>
+                      </div>
+                    )}
+                    {business.productHsCode && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">HS Code:</label>
+                        <p className="text-slate-800 font-mono font-bold text-sm">{business.productHsCode}</p>
+                      </div>
+                    )}
+                    {business.currentExportMarkets && (
                       <div>
                         <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Export Markets:</label>
                         <p className="text-slate-800 font-medium text-sm">
-                          {business.currentExportMarkets.split(',').map((market: string) => market.trim()).join(', ')}
+                          {business.currentExportMarkets.split(',').map((m: string) => m.trim()).join(', ')}
                         </p>
                       </div>
                     )}
-                    <div>
-                      <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1 flex items-center gap-1">
-                        <Globe className="h-3 w-3" />
-                        Website:
-                      </label>
-                      <p className="text-[#007a46] font-bold text-sm break-all underline decoration-emerald-100 underline-offset-4">
-                        {business.websiteUrl || business.website || 'www.business.com'}
-                      </p>
-                    </div>
+                    {business.exportVolumePast3Years && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Export Volume (3 yrs):</label>
+                        <p className="text-slate-800 font-medium text-sm">{business.exportVolumePast3Years}</p>
+                      </div>
+                    )}
+                    {business.productionCapacityPast3 && (
+                      <div>
+                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Production Capacity (3 yrs):</label>
+                        <p className="text-slate-800 font-medium text-sm">{business.productionCapacityPast3}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
