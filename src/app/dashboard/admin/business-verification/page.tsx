@@ -658,30 +658,41 @@ export default function BusinessVerificationPage() {
         'Rating',
         'Featured',
         'Profile Complete',
-        
+
         // Location
         'Location',
         'County',
         'Town',
         'Sector',
+        'Industry',
         'Physical Address',
         'Coordinates',
-        
+
         // Business Details
         'Type of Business',
         'Organization',
         'Company Size',
         'Number of Employees',
-        'Year Established',
-        
+        'Date of Incorporation',
+        'Legal Structure',
+
         // Registration
         'Registration Number',
         'KRA PIN',
-        'Tax ID',
         'Export License',
-        'License Number',
+        'Licence Number',
         'National ID',
-        
+
+        // Products & Services
+        'Products / Services',
+        'Product HS Code',
+
+        // Primary Contact (from Registration)
+        'Primary Contact First Name',
+        'Primary Contact Last Name',
+        'Primary Contact Email',
+        'Primary Contact Phone',
+
         // Contact
         'Contact Email',
         'Company Email',
@@ -691,17 +702,17 @@ export default function BusinessVerificationPage() {
         'Website',
         'Instagram',
         'Twitter',
-        
+
         // Export Info
         'Current Export Markets',
         'Export Volume (3yrs)',
         'Production Capacity (3yrs)',
-        
+
         // Owner Info
         'Owner Name',
         'Owner Email',
         'Owner Phone',
-        
+
         // Verification
         'Verification Notes',
         'Featured At',
@@ -715,7 +726,7 @@ export default function BusinessVerificationPage() {
       const rows = businesses.map((b: any) => {
         const owner = b.owner || {};
         const ownerName = `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || 'N/A';
-        
+
         return [
           // Basic Info
           b.name || '',
@@ -725,29 +736,41 @@ export default function BusinessVerificationPage() {
           b.rating || '',
           b.featured ? 'Yes' : 'No',
           b.profileComplete ? 'Yes' : 'No',
-          
+
           // Location
           b.location || '',
           b.county || '',
           b.town || '',
           b.sector || '',
+          b.industry || '',
           b.physicalAddress || '',
           b.coordinates || '',
-          
+
           // Business Details
+          b.typeOfBusiness || '',
           b.businessUserOrganisation || '',
           b.companySize || '',
           b.numberOfEmployees || '',
           b.dateOfIncorporation || '',
           b.legalStructure || '',
-          
+
           // Registration
           b.registrationNumber || '',
           b.kraPin || '',
           b.exportLicense || '',
           b.licenceNumber || '',
           b.kenyanNationalId || '',
-          
+
+          // Products & Services
+          b.serviceOffering || '',
+          b.productHsCode || '',
+
+          // Primary Contact (from Registration)
+          b.primaryContactFirstName || '',
+          b.primaryContactLastName || '',
+          b.primaryContactEmail || '',
+          b.primaryContactPhone || '',
+
           // Contact
           b.contactEmail || '',
           b.companyEmail || '',
@@ -757,17 +780,17 @@ export default function BusinessVerificationPage() {
           b.website || '',
           b.instagramUrl || '',
           b.twitterUrl || '',
-          
+
           // Export Info
           b.currentExportMarkets || '',
           b.exportVolumePast3Years || '',
           b.productionCapacityPast3 || '',
-          
+
           // Owner Info
           ownerName,
           owner.email || '',
           owner.phoneNumber || '',
-          
+
           // Verification
           b.verificationNotes || '',
           b.featuredAt ? new Date(b.featuredAt).toLocaleString() : '',

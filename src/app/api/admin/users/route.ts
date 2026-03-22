@@ -97,6 +97,7 @@ export const GET = requirePermission(
             avatar: true,
             createdAt: true,
             updatedAt: true,
+            lastLoginAt: true,
             business: {
               select: {
                 id: true,
