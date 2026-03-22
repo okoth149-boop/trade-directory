@@ -235,6 +235,8 @@ export default function BusinessProfilePage() {
             // Story
             companyStory: business.companyStory || '',
             certifications: business.certifications || [],
+            // Directors
+            managementTeam: (business as any).managementTeam || '',
           } : undefined}
           onSubmit={handleSubmit}
           onAutoSave={handleAutoSave}

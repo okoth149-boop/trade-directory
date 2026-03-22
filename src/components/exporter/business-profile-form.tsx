@@ -245,6 +245,9 @@ export function BusinessProfileForm({
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
+  // Track previous serialized form values to avoid firing autosave on every render
+  const prevFormValuesRef = useRef<string>('');
+  const prevDirectorsRef = useRef<string>('');
 
   const runSave = useCallback(async (data: any) => {
     if (!onAutoSave) return;
@@ -265,9 +268,13 @@ export function BusinessProfileForm({
     autoSaveTimerRef.current = setTimeout(() => {
       // Autosave: never include certifications — they are only saved on explicit submit
       // This prevents the delete+recreate loop that causes duplication
-      runSave({ ...form.getValues() });
+      // Include directors (managementTeam) so they are persisted on autosave too
+      runSave({
+        ...form.getValues(),
+        managementTeam: directors.length > 0 ? JSON.stringify(directors) : null,
+      });
     }, 500);
-  }, [onAutoSave, form, runSave]);
+  }, [onAutoSave, form, runSave, directors]);
 
   useEffect(() => {
     // Skip the very first render (initial population from initialData)
@@ -275,11 +282,23 @@ export function BusinessProfileForm({
       isFirstRender.current = false;
       return;
     }
+    // Only trigger autosave when form values or directors actually changed
+    // (avoids infinite loop caused by setBusiness in parent re-rendering this component)
+    const currentFormValues = JSON.stringify(form.getValues());
+    const currentDirectors = JSON.stringify(directors);
+    if (
+      currentFormValues === prevFormValuesRef.current &&
+      currentDirectors === prevDirectorsRef.current
+    ) {
+      return;
+    }
+    prevFormValuesRef.current = currentFormValues;
+    prevDirectorsRef.current = currentDirectors;
     triggerDebouncedSave();
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [watchedValues, certifications]);
+  }, [watchedValues, directors]);
 
   // Calculate completion percentage
   useEffect(() => {
@@ -406,7 +425,10 @@ export function BusinessProfileForm({
   // Fire-and-forget — never blocks navigation, never touches certifications
   const silentAutoSave = () => {
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    runSave({ ...form.getValues() });
+    runSave({
+      ...form.getValues(),
+      managementTeam: directors.length > 0 ? JSON.stringify(directors) : null,
+    });
   };
 
   // Handle next button click with validation + auto-save
