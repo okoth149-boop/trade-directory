@@ -184,6 +184,7 @@ export function DocumentPreviewDialog({
     industry: business?.industry || null,
     productHsCode: business?.productHsCode || null,
     serviceOffering: business?.serviceOffering || null,
+    typeOfBusiness: business?.typeOfBusiness || 'N/A',
   };
 
   return (
@@ -236,7 +237,7 @@ export function DocumentPreviewDialog({
                   <span className="font-medium truncate">{businessData.sector}</span>
                 </div>
                 <div className="flex gap-1">
-                  <span className="text-gray-500 dark:text-gray-400 shrink-0">Type:</span>
+                  <span className="text-gray-500 dark:text-gray-400 shrink-0">Type of Business:</span>
                   <span className="font-medium truncate">{businessData.typeOfBusiness}</span>
                 </div>
                 <div className="flex gap-1">
