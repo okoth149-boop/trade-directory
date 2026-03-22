@@ -29,6 +29,7 @@ import {
   PublishedWithChanges,
   UnpublishedOutlined,
   DeleteForever,
+  Email,
 } from '@mui/icons-material';
 import { toast } from '@/hooks/use-toast';
 import { ALL_SECTORS, COUNTIES, RATING_FILTERS } from '@/lib/constants';
@@ -307,6 +308,25 @@ export default function BusinessVerificationPage() {
                 }}
               >
                 <Visibility sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Send Email">
+              <IconButton
+                size="small"
+                color="info"
+                onClick={() => {
+                  const email = row?.contactEmail || row?.companyEmail || row?.owner?.email;
+                  if (!email) return;
+                  const a = document.createElement('a');
+                  a.href = `mailto:${email}`;
+                  a.target = '_blank';
+                  a.rel = 'noopener noreferrer';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }}
+              >
+                <Email sx={{ fontSize: 18 }} />
               </IconButton>
             </Tooltip>
             <Tooltip title={row.featured ? 'Unfeature' : 'Feature'}>

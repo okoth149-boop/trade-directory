@@ -233,7 +233,19 @@ export default function UserManagementPage() {
             </IconButton>
           </Tooltip>
           <Tooltip title="Send Email">
-            <IconButton size="small" color="info" onClick={() => { window.location.href = `mailto:${params?.row?.email}`; }}>
+            <IconButton
+              size="small"
+              color="info"
+              onClick={() => {
+                const a = document.createElement('a');
+                a.href = `mailto:${params?.row?.email}`;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+              }}
+            >
               <Email sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
