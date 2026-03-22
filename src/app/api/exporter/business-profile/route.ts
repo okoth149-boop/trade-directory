@@ -137,6 +137,8 @@ export async function POST(request: NextRequest) {
         
         // Business Details
         businessPurpose: businessData.businessPurpose,
+        typeOfBusiness: businessData.typeOfBusiness,
+        serviceOffering: businessData.serviceOffering,
         dateOfIncorporation: businessData.dateOfIncorporation,
         legalStructure: businessData.legalStructure,
         numberOfEmployees: businessData.numberOfEmployees,
@@ -353,10 +355,12 @@ export async function PUT(request: NextRequest) {
         logoUrl: businessData.logoUrl,
         
         // Business Details (editable only)
+        typeOfBusiness: businessData.typeOfBusiness,
         yearEstablished: businessData.yearEstablished,
         numberOfEmployees: businessData.numberOfEmployees,
         companySize: businessData.companySize,
         exportLicense: businessData.exportLicense,
+        serviceOffering: businessData.serviceOffering,
         businessUserOrganisation: businessData.businessUserOrganisation,
         productHsCode: businessData.productHsCode,
         shareholders: businessData.shareholders,

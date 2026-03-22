@@ -193,16 +193,26 @@ export default function BusinessProfilePage() {
             kenyanNationalId: business.kenyanNationalId || '',
             name: business.name,
             logoUrl: business.logoUrl || '',
+            // Business Details
+            typeOfBusiness: business.typeOfBusiness || '',
+            yearEstablished: business.yearEstablished || '',
             numberOfEmployees: business.numberOfEmployees || '',
             companySize: business.companySize || '',
             kraPin: business.kraPin || '',
             registrationNumber: business.registrationNumber || '',
             exportLicense: business.exportLicense || '',
             sector: business.sector,
+            industry: business.industry || '',
+            productHsCode: business.productHsCode || '',
+            serviceOffering: business.serviceOffering || '',
             businessUserOrganisation: business.businessUserOrganisation || '',
+            // Documents
             registrationCertificateUrl: business.registrationCertificateUrl || '',
             pinCertificateUrl: business.pinCertificateUrl || '',
+            kenyanNationalIdUrl: business.kenyanNationalIdUrl || '',
+            incorporationCertificateUrl: business.incorporationCertificateUrl || '',
             exportLicenseUrl: business.exportLicenseUrl || '',
+            // Location & Contact
             licenceNumber: business.licenceNumber || '',
             town: business.town || '',
             county: business.county || '',
@@ -212,14 +222,18 @@ export default function BusinessProfilePage() {
             mobileNumber: business.mobileNumber || '',
             companyEmail: business.companyEmail || '',
             whatsappNumber: business.whatsappNumber || '',
+            // Social Media
             twitterUrl: business.twitterUrl || '',
             instagramUrl: business.instagramUrl || '',
+            // GPS
             coordinates: business.coordinates || '',
+            // Capacity
             exportVolumePast3Years: business.exportVolumePast3Years || '',
             currentExportMarkets: business.currentExportMarkets 
               ? business.currentExportMarkets.split(',').map(m => m.trim())
               : [],
             productionCapacityPast3: business.productionCapacityPast3 || '',
+            // Story
             companyStory: business.companyStory || '',
             certifications: business.certifications || [],
           } : undefined}

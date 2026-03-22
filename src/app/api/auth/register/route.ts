@@ -18,18 +18,40 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
 
-// Validation schema — partnerType is a free string to support "Other: <custom>" values
 const registerSchema = z.object({
+  // Account credentials
   email: z.string().email(),
   password: z.string().min(8),
   firstName: z.string().min(2),
   lastName: z.string().min(2),
-  phoneNumber: z.string().min(10).optional(),
+  phoneNumber: z.string().optional(),
   role: z.enum(['ADMIN', 'EXPORTER', 'BUYER']).default('BUYER'),
-  businessName: z.string().optional(),
-  businessLocation: z.string().optional(),
-  productCategory: z.string().optional(),
   partnerType: z.string().optional(),
+
+  // Business info (exporter)
+  businessName: z.string().optional(),
+  businessRegistrationNumber: z.string().optional(),
+  dateOfIncorporation: z.string().optional(),
+  legalStructure: z.string().optional(),
+  industry: z.string().optional(),
+  sector: z.string().optional(),
+  productServices: z.array(z.string()).optional(),
+  productCategory: z.string().optional(), // legacy alias
+
+  // Location
+  fullAddress: z.string().optional(),
+  county: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  businessLocation: z.string().optional(), // legacy alias
+
+  // Primary contact
+  primaryContactFirstName: z.string().optional(),
+  primaryContactLastName: z.string().optional(),
+  primaryContactEmail: z.string().optional(),
+  primaryContactPhone: z.string().optional(),
+  companyEmail: z.string().optional(),
+  companyPhone: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -66,15 +88,37 @@ export async function POST(request: NextRequest) {
       } as Parameters<typeof prisma.user.create>[0]['data'],
     });
 
-    // Create business if role is EXPORTER and business details provided
+    // Create business if role is EXPORTER and business name provided
     let business = null;
     if (validatedData.role === 'EXPORTER' && validatedData.businessName) {
+      const resolvedSector = validatedData.sector || validatedData.productCategory || 'General';
+      const resolvedLocation = validatedData.city || validatedData.businessLocation || validatedData.county || '';
+      const productServicesStr = Array.isArray(validatedData.productServices)
+        ? validatedData.productServices.join(', ')
+        : undefined;
+
       business = await prisma.business.create({
         data: {
           name: validatedData.businessName,
-          location: validatedData.businessLocation || '',
-          sector: validatedData.productCategory || 'General',
-          contactEmail: validatedData.email,
+          location: resolvedLocation,
+          sector: resolvedSector,
+          industry: validatedData.industry,
+          legalStructure: validatedData.legalStructure,
+          dateOfIncorporation: validatedData.dateOfIncorporation,
+          registrationNumber: validatedData.businessRegistrationNumber,
+          physicalAddress: validatedData.fullAddress,
+          county: validatedData.county,
+          town: validatedData.city,
+          city: validatedData.city,
+          country: validatedData.country || 'Kenya',
+          contactEmail: validatedData.companyEmail || validatedData.email,
+          companyEmail: validatedData.companyEmail || validatedData.email,
+          contactPhone: validatedData.companyPhone,
+          primaryContactFirstName: validatedData.primaryContactFirstName,
+          primaryContactLastName: validatedData.primaryContactLastName,
+          primaryContactEmail: validatedData.primaryContactEmail,
+          primaryContactPhone: validatedData.primaryContactPhone,
+          productCatalog: productServicesStr,
           ownerId: user.id,
           verificationStatus: 'PENDING',
         },
