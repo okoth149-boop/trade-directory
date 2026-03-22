@@ -47,8 +47,8 @@ export default function SystemLogsPage() {
   const router = useRouter();
   const isSuperAdmin = (user as any)?.isSuperAdmin === true;
 
-  // Normal Admin starts on activity tab; Super Admin starts on audit tab
-  const [tab, setTab] = useState(isSuperAdmin ? 0 : 1);
+  // Super Admin: tab 0 = Audit, tab 1 = Activity. Normal Admin: only tab 0 = Activity.
+  const [tab, setTab] = useState(0);
   const [rows, setRows] = useState<(ActivityLog | AuditLog)[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -63,8 +63,7 @@ export default function SystemLogsPage() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    // Normal Admin: redirect away from audit tab if they somehow land on it
-    if (!isSuperAdmin && tab === 0) setTab(1);
+    // No longer needed — tab always starts at 0
   }, [isSuperAdmin, tab]);
 
   useEffect(() => {
@@ -76,7 +75,8 @@ export default function SystemLogsPage() {
     const params = new URLSearchParams({
       page: String(paginationModel.page + 1),
       limit: String(paginationModel.pageSize),
-      type: tab === 0 && isSuperAdmin ? 'audit' : 'activity',
+      // Super Admin: tab 0 = audit, tab 1 = activity. Normal Admin: tab 0 = activity.
+      type: (isSuperAdmin && tab === 0) ? 'audit' : 'activity',
       ...(debouncedSearch && { search: debouncedSearch }),
       ...(actionFilter && { action: actionFilter }),
       ...(startDate && { startDate }),
@@ -126,7 +126,7 @@ export default function SystemLogsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${tab === 0 ? 'audit' : 'activity'}-logs-${Date.now()}.${fmt}`;
+      a.download = `${isAuditTab ? 'audit' : 'activity'}-logs-${Date.now()}.${fmt}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -253,7 +253,8 @@ export default function SystemLogsPage() {
     },
   ];
 
-  if (!isSuperAdmin && tab === 0) return null; // guard while tab state syncs
+  // Determine which log type is active
+  const isAuditTab = isSuperAdmin && tab === 0;
 
   const uniqueUsers = [...new Set(rows.map((l: any) => (l.user?.id || l.adminUser?.id)).filter(Boolean))].length;
 
@@ -319,7 +320,7 @@ export default function SystemLogsPage() {
             <InputLabel>Action</InputLabel>
             <Select value={actionFilter} label="Action" onChange={e => setActionFilter(e.target.value)}>
               <MenuItem value="">All Actions</MenuItem>
-              {(tab === 0
+              {(isAuditTab
                 ? ['CREATE', 'UPDATE', 'DELETE', 'VERIFY', 'SUSPEND', 'RESTORE']
                 : ['USER_CREATED', 'USER_UPDATED', 'USER_DELETED', 'USER_SUSPENDED',
                    'BUSINESS_VERIFIED', 'BUSINESS_UPDATED', 'PRODUCT_VERIFIED', 'LOGIN']
@@ -363,7 +364,7 @@ export default function SystemLogsPage() {
         </Box>
 
         <AdminTableWrapper
-          columns={tab === 0 ? auditColumns : activityColumns}
+          columns={isAuditTab ? auditColumns : activityColumns}
           rows={rows}
           rowCount={total}
           loading={loading}
@@ -373,7 +374,7 @@ export default function SystemLogsPage() {
           onSortModelChange={setSortModel}
           checkboxSelection={false}
           getRowId={(row: any) => row.id}
-          emptyMessage={tab === 0 ? 'No admin audit logs found' : 'No user activity logs found'}
+          emptyMessage={isAuditTab ? 'No admin audit logs found' : 'No user activity logs found'}
         />
       </MainCard>
     </Box>
