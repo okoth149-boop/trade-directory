@@ -195,7 +195,6 @@ export default function BusinessProfilePage() {
             logoUrl: business.logoUrl || '',
             // Business Details
             typeOfBusiness: business.typeOfBusiness || '',
-            yearEstablished: business.yearEstablished || '',
             numberOfEmployees: business.numberOfEmployees || '',
             companySize: business.companySize || '',
             kraPin: business.kraPin || '',
@@ -420,8 +419,8 @@ export default function BusinessProfilePage() {
                   <p className="font-medium">{business.sector}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Year Established</p>
-                  <p className="font-medium">{business.yearEstablished || 'Not specified'}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Date of Incorporation</p>
+                  <p className="font-medium">{business.dateOfIncorporation || 'Not specified'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Number of Employees</p>

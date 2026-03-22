@@ -126,7 +126,6 @@ model Business {
   businessUserOrganisation   String?
   companySize                String?
   numberOfEmployees          String?
-  yearEstablished            String?
   registrationNumber         String?
   kraPin                     String?
   taxId                      String?
@@ -149,8 +148,6 @@ model Business {
   exportLicenseUrl           String?
   exportVolumePast3Years     String?
   instagramUrl               String?
-  linkedInUrl                String?
-  facebookUrl                String?
   kenyanNationalId           String?
   kenyanNationalIdUrl        String?
   incorporationCertificateUrl String?

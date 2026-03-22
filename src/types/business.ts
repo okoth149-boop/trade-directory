@@ -10,10 +10,11 @@ export type BusinessWithRelations = Business & {
 export interface BusinessFormData {
   // Basic Details
   kenyanNationalId: string;
-  name: string;
+  name?: string;           // read-only from registration
   logoUrl: string;
   
   // Business Details
+  typeOfBusiness?: string;
   businessPurpose?: string;
   dateOfIncorporation?: string;
   legalStructure?: string;
@@ -22,17 +23,19 @@ export interface BusinessFormData {
   kraPin: string;
   registrationNumber?: string;
   exportLicense?: string;
-  sector: string;
-  industry?: string;
+  sector?: string;         // read-only from registration
+  industry?: string;       // read-only from registration
   productHsCode?: string;
-  serviceOffering?: string;
-  businessUserOrganisation: string;
+  serviceOffering?: string; // read-only from registration
+  businessUserOrganisation?: string;
   shareholders?: string;
   managementTeam?: string;
   
   // Primary Contact
   primaryContactFirstName?: string;
   primaryContactLastName?: string;
+  primaryContactEmail?: string;
+  primaryContactPhone?: string;
   
   // Documents
   registrationCertificateUrl: string;
@@ -41,15 +44,15 @@ export interface BusinessFormData {
   incorporationCertificateUrl?: string;
   exportLicenseUrl?: string;
   
-  // Location & Contact
-  licenceNumber: string;
-  town: string;
-  county: string;
-  physicalAddress: string;
+  // Location & Contact — read-only fields optional
+  licenceNumber?: string;
+  town?: string;           // read-only from registration
+  county?: string;         // read-only from registration
+  physicalAddress?: string; // read-only from registration
   website?: string;
-  contactPhone: string;
+  contactPhone?: string;   // read-only from registration
   mobileNumber?: string;
-  companyEmail: string;
+  companyEmail?: string;   // read-only from registration
   whatsappNumber?: string;
   
   // Social Media

@@ -396,10 +396,10 @@ export function ExporterGridCard({ business, onViewProfileClick, hideActions }: 
 
           {/* Business Details Grid */}
           <div className="grid grid-cols-2 gap-3 mb-4 text-xs">
-            {business.yearEstablished && (
+            {business.dateOfIncorporation && (
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Est. {business.yearEstablished}</span>
+                <span className="text-muted-foreground">Est. {business.dateOfIncorporation}</span>
               </div>
             )}
             {business.companySize && (

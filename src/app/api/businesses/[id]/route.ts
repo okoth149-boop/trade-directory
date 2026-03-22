@@ -115,7 +115,7 @@ export async function PUT(
     const validFields = [
       'name', 'description', 'location', 'county', 'town', 'coordinates', 'sector',
       'contactEmail', 'contactPhone', 'companyEmail', 'mobileNumber', 'website', 'physicalAddress',
-      'typeOfBusiness', 'businessUserOrganisation', 'companySize', 'numberOfEmployees', 'yearEstablished',
+      'typeOfBusiness', 'businessUserOrganisation', 'companySize', 'numberOfEmployees',
       'registrationNumber', 'kraPin', 'taxId', 'exportLicense', 'licenceNumber', 'kenyanNationalId',
       'currentExportMarkets', 'companyStory', 'exportVolumePast3Years', 'productionCapacityPast3',
       'logoUrl', 'registrationCertificateUrl', 'pinCertificateUrl', 'exportLicenseUrl', 'taxCertificateUrl', 'verificationDocuments',

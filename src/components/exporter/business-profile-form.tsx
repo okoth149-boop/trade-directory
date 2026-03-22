@@ -48,21 +48,21 @@ import {
 const businessFormSchema = z.object({
   // Basic Details
   kenyanNationalId: z.string().min(1, 'Kenyan National ID is required'),
-  name: z.string().min(1, 'Business name is required'),
+  name: z.string().optional(),                  // read-only (from registration)
   logoUrl: z.string().min(1, 'Company logo is required'),
   
   // Business Details
-  typeOfBusiness: z.string().min(1, 'Type of business is required'),
-  yearEstablished: z.string().optional(),
+  typeOfBusiness: z.string().optional(),        // not rendered as editable input
+  legalStructure: z.string().optional(),
   numberOfEmployees: z.string().min(1, 'Number of employees is required'),
   companySize: z.string().optional(),
   kraPin: z.string().min(1, 'KRA PIN is required'),
-  registrationNumber: z.string().optional(),
+  registrationNumber: z.string().optional(),    // read-only (from registration)
   exportLicense: z.string().optional(),
-  sector: z.string().min(1, 'Business sector is required'),
-  industry: z.string().optional(),
+  sector: z.string().optional(),                // read-only (from registration)
+  industry: z.string().optional(),              // read-only (from registration)
   productHsCode: z.string().optional(),
-  serviceOffering: z.string().optional(),
+  serviceOffering: z.string().optional(),       // read-only (from registration)
   businessUserOrganisation: z.string().optional(),
   
   // Documents
@@ -72,20 +72,26 @@ const businessFormSchema = z.object({
   incorporationCertificateUrl: z.string().optional(),
   exportLicenseUrl: z.string().optional(),
   
-  // Location & Contact
+  // Location & Contact — all read-only fields made optional
   licenceNumber: z.string().optional(),
-  town: z.string().min(1, 'Town is required'),
-  county: z.string().min(1, 'County is required'),
-  physicalAddress: z.string().min(1, 'Physical address is required'),
+  town: z.string().optional(),                  // read-only (from registration)
+  county: z.string().optional(),                // read-only (from registration)
+  physicalAddress: z.string().optional(),       // read-only (from registration)
   website: z.string().optional(),
-  contactPhone: z.string().min(1, 'Contact phone is required'),
+  contactPhone: z.string().optional(),          // read-only (from registration)
   mobileNumber: z.string().optional(),
-  companyEmail: z.string().email('Valid email is required'),
+  companyEmail: z.string().optional(),          // read-only (from registration)
   whatsappNumber: z.string().optional(),
   
   // Social Media
   twitterUrl: z.string().optional(),
   instagramUrl: z.string().optional(),
+  
+  // Primary Contact (read-only from registration)
+  primaryContactFirstName: z.string().optional(),
+  primaryContactLastName: z.string().optional(),
+  primaryContactEmail: z.string().optional(),
+  primaryContactPhone: z.string().optional(),
   
   // Location GPS
   coordinates: z.string().min(1, 'GPS coordinates are required'),
@@ -191,7 +197,6 @@ export function BusinessProfileForm({
       logoUrl: '',
       typeOfBusiness: registrationData?.legalStructure || '',
       legalStructure: registrationData?.legalStructure || '',
-      yearEstablished: '',
       numberOfEmployees: '',
       companySize: '',
       kraPin: '',
@@ -364,14 +369,13 @@ export function BusinessProfileForm({
     }
   };
 
-  // Define required fields for each section
   const sectionRequiredFields: Record<number, string[]> = {
-    0: ['kenyanNationalId', 'name', 'logoUrl'], // Basic Details
-    1: ['typeOfBusiness', 'numberOfEmployees', 'kraPin', 'sector'], // Business Details
-    2: ['registrationCertificateUrl', 'pinCertificateUrl'], // Documents (exportLicenseUrl is optional)
-    3: ['town', 'county', 'physicalAddress', 'contactPhone', 'companyEmail'], // Location & Contact
-    4: ['coordinates'], // Social Media & Location (coordinates is now required)
-    5: [], // Company Capacity & Story (all optional)
+    0: ['kenyanNationalId', 'logoUrl'],          // name is read-only
+    1: ['numberOfEmployees', 'kraPin'],           // sector/typeOfBusiness are read-only
+    2: ['registrationCertificateUrl', 'pinCertificateUrl'],
+    3: [],                                        // town/county/address/phone/email all read-only
+    4: ['coordinates'],
+    5: [],
   };
 
   // Validate current section before moving to next
@@ -546,11 +550,6 @@ export function BusinessProfileForm({
               <div>
                 <Label htmlFor="name">Business Name *</Label>
                 <FromRegField value={form.watch('name') || ''} />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -643,13 +642,8 @@ export function BusinessProfileForm({
               </div>
 
               <div>
-                <Label>Business Sector *</Label>
+                <Label>Business Sector</Label>
                 <FromRegField value={form.watch('sector') || ''} />
-                {form.formState.errors.sector && (
-                  <p className="text-sm text-red-600 mt-1">
-                    {form.formState.errors.sector.message}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -1062,7 +1056,7 @@ export function BusinessProfileForm({
       </div>
 
       {/* Form Content */}
-      <form onSubmit={form.handleSubmit(handleSubmit)}>
+      <form onSubmit={form.handleSubmit(handleSubmit as any)}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">

@@ -258,7 +258,6 @@ const REGISTRATION_OWNED_FIELDS = [
   'name',
   'registrationNumber',
   'dateOfIncorporation',
-  'yearEstablished',
   'legalStructure',
   'industry',
   'sector',
@@ -356,7 +355,6 @@ export async function PUT(request: NextRequest) {
         
         // Business Details (editable only)
         typeOfBusiness: businessData.typeOfBusiness,
-        yearEstablished: businessData.yearEstablished,
         numberOfEmployees: businessData.numberOfEmployees,
         companySize: businessData.companySize,
         kraPin: businessData.kraPin,

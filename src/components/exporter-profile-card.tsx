@@ -146,8 +146,8 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
     ? formatDistanceToNow(new Date(business.updatedAt), { addSuffix: true })
     : 'recently';
   
-  // Get date of incorporation (replaces yearEstablished)
-  const dateOfIncorporation = business.dateOfIncorporation || (business as any).yearEstablished || (business as any).yearOfEstablishment;
+  // Get date of incorporation
+  const dateOfIncorporation = business.dateOfIncorporation;
 
   // Parse coordinates from the coordinates string field
   const getCoordinates = () => {
