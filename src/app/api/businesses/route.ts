@@ -118,17 +118,6 @@ export async function GET(request: NextRequest) {
         if (rangeConds.length) conditions.push({ OR: rangeConds });
       }
 
-      if (filters.yearEstablished?.length) {
-        const cy = new Date().getFullYear();
-        const yearConds: Record<string, unknown>[] = [];
-        for (const opt of filters.yearEstablished) {
-          if (opt === 'Last 5 years')      yearConds.push({ yearEstablished: { gte: String(cy - 5)  } });
-          if (opt === 'Last 10 years')     yearConds.push({ yearEstablished: { gte: String(cy - 10) } });
-          if (opt === 'Over 10 years ago') yearConds.push({ yearEstablished: { lt:  String(cy - 10) } });
-        }
-        if (yearConds.length) conditions.push({ OR: yearConds });
-      }
-
       if (filters.certification?.length) {
         conditions.push({
           certifications: {

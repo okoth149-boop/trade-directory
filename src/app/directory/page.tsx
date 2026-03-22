@@ -41,9 +41,6 @@ const filterCategories = [
   { id: 'numberOfEmployees', name: 'Company Size (Employees)', options: [
     '1-49', '50-100', '101-200', '201-500', '501-1000', '1000+',
   ] },
-  { id: 'yearEstablished', name: 'Year Established', options: [
-    'Last 5 years', 'Last 10 years', 'Over 10 years ago',
-  ] },
   { id: 'certification', name: 'Certification', options: [
     'ISO 9001', 'ISO 14001', 'Fair Trade', 'GlobalG.A.P.', 'Organic Certified',
     'HACCP', 'KEBS Mark of Quality', 'Rainforest Alliance', 'Made in Kenya',
@@ -675,21 +672,6 @@ function DirectoryPageContentClient() {
                   case '501-1000':return count >= 501 && count <= 1000;
                   case '1000+':   return count > 1000;
                   default:        return false;
-                }
-              });
-            }
-            case 'yearEstablished': {
-              const cy = new Date().getFullYear();
-              const yr = business.yearEstablished
-                ? parseInt(business.yearEstablished)
-                : business.createdAt ? new Date(business.createdAt).getFullYear() : null;
-              if (!yr) return false;
-              return values.some(opt => {
-                switch (opt) {
-                  case 'Last 5 years':     return yr >= cy - 5;
-                  case 'Last 10 years':    return yr >= cy - 10;
-                  case 'Over 10 years ago':return yr < cy - 10;
-                  default:                 return false;
                 }
               });
             }
