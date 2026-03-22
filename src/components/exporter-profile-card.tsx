@@ -621,18 +621,6 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
                         <p className="text-slate-800 font-bold text-sm">{business.contactPhone}</p>
                       </div>
                     )}
-                    {business.mobileNumber && (
-                      <div>
-                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Mobile:</label>
-                        <p className="text-slate-800 font-bold text-sm">{business.mobileNumber}</p>
-                      </div>
-                    )}
-                    {business.whatsappNumber && (
-                      <div>
-                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">WhatsApp:</label>
-                        <p className="text-slate-800 font-bold text-sm">{business.whatsappNumber}</p>
-                      </div>
-                    )}
                     {(business.website || (business as any).websiteUrl) && (
                       <div>
                         <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1 flex items-center gap-1">
@@ -642,12 +630,6 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
                         <p className="text-[#007a46] font-bold text-sm break-all underline decoration-emerald-100 underline-offset-4">
                           {business.website || (business as any).websiteUrl}
                         </p>
-                      </div>
-                    )}
-                    {business.physicalAddress && (
-                      <div>
-                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Physical Address:</label>
-                        <p className="text-slate-800 font-medium text-sm">{business.physicalAddress}</p>
                       </div>
                     )}
                   </div>
@@ -686,18 +668,6 @@ function ExporterProfileCard({ business, onPinClick, hideBadgeOnMobile = false }
                         <p className="text-slate-800 font-medium text-sm">
                           {business.currentExportMarkets.split(',').map((m: string) => m.trim()).join(', ')}
                         </p>
-                      </div>
-                    )}
-                    {business.exportVolumePast3Years && (
-                      <div>
-                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Export Volume (3 yrs):</label>
-                        <p className="text-slate-800 font-medium text-sm">{business.exportVolumePast3Years}</p>
-                      </div>
-                    )}
-                    {business.productionCapacityPast3 && (
-                      <div>
-                        <label className="text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase block mb-1">Production Capacity (3 yrs):</label>
-                        <p className="text-slate-800 font-medium text-sm">{business.productionCapacityPast3}</p>
                       </div>
                     )}
                   </div>
