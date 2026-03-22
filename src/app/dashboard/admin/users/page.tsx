@@ -233,7 +233,7 @@ export default function UserManagementPage() {
             </IconButton>
           </Tooltip>
           <Tooltip title="Send Email">
-            <IconButton size="small" color="info" onClick={() => window.open(`mailto:${params?.row?.email}`)}>
+            <IconButton size="small" color="info" onClick={() => { window.location.href = `mailto:${params?.row?.email}`; }}>
               <Email sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
